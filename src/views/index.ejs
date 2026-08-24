@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">LJV / TEMPORADA 2026</p>
+      <h1>Interclases de futbol</h1>
+      <p>Lucrecio Jaramillo Velez</p>
+    </div>
+    <span class="badge">EN JUEGO</span>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Comunidad deportiva</p>
+        <h2>El colegio se encuentra en la cancha.</h2>
+        <p>Consulta equipos, horarios y resultados de las interclases del LJV.</p>
+      </div>
+      <div class="ball">LJV</div>
+    </section>
+
+    <section class="stats" aria-label="Resumen del torneo">
+      <article><strong><%= summary.teamCount %></strong><span>Equipos inscritos</span></article>
+      <article><strong><%= summary.matchCount %></strong><span>Partidos programados</span></article>
+    </section>
+
+    <section class="schedule">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Agenda</p>
+          <h2>Proximos partidos</h2>
+        </div>
+        <a href="/api/partidos">Ver API</a>
+      </div>
+      <% if (matches.length === 0) { %>
+        <p>No hay partidos programados.</p>
+      <% } else { %>
+        <div class="matches">
+          <% matches.forEach((match) => { %>
+            <article class="match">
+              <time datetime="<%= match.date %>"><%= match.date %> · <%= match.time %></time>
+              <div><strong><%= match.homeTeam %></strong><span>vs.</span><strong><%= match.awayTeam %></strong></div>
+              <small><%= match.status %></small>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <footer>Interclases LJV · Lucrecio Jaramillo Velez</footer>
+</body>
+</html>
