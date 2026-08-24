@@ -52,6 +52,30 @@ body {
     font-size: 35px;
 }
 
+.acciones-usuario {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.boton {
+    padding: 12px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.boton-login {
+    background-color: white;
+    color: #168c45;
+}
+
+.boton-registro {
+    background-color: #ffd60a;
+    color: #1b4332;
+}
+
 
 /* =========================
    SECCIONES
@@ -218,6 +242,11 @@ footer p {
 
     .encabezado h1 {
         font-size: 26px;
+    }
+
+    .acciones-usuario {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .imagenes {

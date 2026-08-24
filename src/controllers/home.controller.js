@@ -12,7 +12,8 @@ function showHome(req, res, next) {
       // Entrega el resumen de equipos y partidos.
       summary: tournamentService.getSummary(),
       // Entrega la lista de partidos para mostrarla en la vista.
-      matches: tournamentService.getMatches()
+      matches: tournamentService.getMatches(),
+      user: req.session && req.session.user ? req.session.user : null
     });
   // Captura cualquier error ocurrido durante el renderizado.
   } catch (error) {
@@ -21,5 +22,21 @@ function showHome(req, res, next) {
   }
 }
 
+function showLogin(req, res) {
+  res.render('login', {
+    title: 'Iniciar sesión | Interclases LJV',
+    error: null,
+    formData: {}
+  });
+}
+
+function showRegister(req, res) {
+  res.render('register', {
+    title: 'Registro | Interclases LJV',
+    error: null,
+    formData: {}
+  });
+}
+
 // Exporta el controlador para conectarlo con las rutas web.
-module.exports = { showHome };
+module.exports = { showHome, showLogin, showRegister };

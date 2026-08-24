@@ -13,7 +13,15 @@
       <h1>Interclases de futbol</h1>
       <p>Lucrecio Jaramillo Velez</p>
     </div>
-    <span class="badge">EN JUEGO</span>
+    <div class="header-actions">
+      <% if (user) { %>
+        <span class="user-badge">Hola, <%= user.name %></span>
+        <a class="btn btn-secondary" href="/logout">Cerrar sesión</a>
+      <% } else { %>
+        <a class="btn btn-secondary" href="/login">Iniciar sesión</a>
+        <a class="btn btn-primary" href="/registro">Registrarse</a>
+      <% } %>
+    </div>
   </header>
 
   <main class="container">
