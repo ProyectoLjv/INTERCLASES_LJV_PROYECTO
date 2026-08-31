@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <p class="eyebrow">ADMINISTRADOR</p>
+        <h1>Panel del administrador</h1>
+      </div>
+      <div class="header-actions">
+        <span class="user-badge">Hola, <%= user.name %></span>
+        <a class="btn btn-secondary" href="/logout">Cerrar sesión</a>
+      </div>
+    </header>
+
+    <main class="dashboard-shell">
+      <aside class="dashboard-sidebar">
+        <nav>
+          <a href="/admin">Inicio</a>
+          <a href="#equipos">Equipos</a>
+          <a href="#partidos">Partidos</a>
+          <a href="#resultados">Resultados</a>
+        </nav>
+      </aside>
+
+      <section class="dashboard-content">
+        <% if (error) { %>
+          <div class="auth-alert error"><%= error %></div>
+        <% } %>
+        <% if (success) { %>
+          <div class="auth-alert success"><%= success %></div>
+        <% } %>
+
+        <div class="panel-card" id="equipos">
+          <h2>Equipos registrados</h2>
+          <% if (!equipos || equipos.length === 0) { %>
+            <p>Aún no hay equipos creados.</p>
+          <% } else { %>
+            <ul class="list-grid">
+              <% equipos.forEach((equipo) => { %>
+                <li><strong><%= equipo.name %></strong> <span><%= equipo.category %></span></li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </div>
+
+        <div class="panel-card" id="partidos">
+          <h2>Programar partido</h2>
+          <form class="dashboard-form" action="/admin/partidos" method="post">
+            <div class="field-row">
+              <label>
+                Equipo local
+                <select name="equipoLocalId" required>
+                  <option value="">Selecciona</option>
+                  <% if (equipos && equipos.length) { %>
+                    <% equipos.forEach((equipo) => { %>
+                      <option value="<%= equipo.id %>"><%= equipo.name %></option>
+                    <% }) %>
+                  <% } %>
+                </select>
+              </label>
+
+              <label>
+                Equipo visitante
+                <select name="equipoVisitanteId" required>
+                  <option value="">Selecciona</option>
+                  <% if (equipos && equipos.length) { %>
+                    <% equipos.forEach((equipo) => { %>
+                      <option value="<%= equipo.id %>"><%= equipo.name %></option>
+                    <% }) %>
+                  <% } %>
+                </select>
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label>
+                Fecha
+                <input type="date" name="fechaPartido" required>
+              </label>
+              <label>
+                Hora
+                <input type="time" name="horaPartido" required>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar partido</button>
+          </form>
+        </div>
+
+        <div class="panel-card" id="resultados">
+          <h2>Resultados y puntuaciones</h2>
+          <% if (!partidos || partidos.length === 0) { %>
+            <p>No hay partidos aún para registrar resultados.</p>
+          <% } else { %>
+            <div class="result-list">
+              <% partidos.forEach((partido) => { %>
+                <div class="result-item">
+                  <div>
+                    <strong><%= partido.equipo_local %></strong>
+                    <span>vs.</span>
+                    <strong><%= partido.equipo_visitante %></strong>
+                    <small><%= partido.fecha_partido %> · <%= partido.hora_partido %></small>
+                  </div>
+
+                  <form action="/admin/partidos/<%= partido.id %>/resultados" method="post" class="score-form">
+                    <input type="number" name="golesLocal" min="0" value="<%= partido.goles_local ?? 0 %>" required>
+                    <span>-</span>
+                    <input type="number" name="golesVisitante" min="0" value="<%= partido.goles_visitante ?? 0 %>" required>
+                    <button type="submit" class="btn btn-secondary dark">Guardar</button>
+                  </form>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -2,15 +2,17 @@
 const tournamentService = require('../services/tournament.service');
 
 // Atiende las solicitudes que piden todos los equipos.
-function listTeams(req, res) {
+async function listTeams(req, res) {
   // Devuelve los equipos dentro de la propiedad data.
-  res.json({ data: tournamentService.getTeams() });
+  const data = await tournamentService.getTeams();
+  res.json({ data });
 }
 
 // Atiende las solicitudes que piden todos los partidos.
-function listMatches(req, res) {
+async function listMatches(req, res) {
   // Devuelve los partidos enriquecidos dentro de la propiedad data.
-  res.json({ data: tournamentService.getMatches() });
+  const data = await tournamentService.getMatches();
+  res.json({ data });
 }
 
 // Exporta los controladores para conectarlos con las rutas de la API.

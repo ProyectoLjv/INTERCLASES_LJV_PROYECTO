@@ -54,8 +54,18 @@
           <% matches.forEach((match) => { %>
             <article class="match">
               <time datetime="<%= match.date %>"><%= match.date %> · <%= match.time %></time>
-              <div><strong><%= match.homeTeam %></strong><span>vs.</span><strong><%= match.awayTeam %></strong></div>
-              <small><%= match.status %></small>
+              <div>
+                <strong><%= match.homeTeam %></strong>
+                <span>vs.</span>
+                <strong><%= match.awayTeam %></strong>
+              </div>
+              <small>
+                <%= match.status %>
+                <% if (match.result) { %>
+                  <br>
+                  <span><%= match.result %></span>
+                <% } %>
+              </small>
             </article>
           <% }) %>
         </div>

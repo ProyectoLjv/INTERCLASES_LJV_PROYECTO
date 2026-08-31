@@ -18,16 +18,19 @@ async function register(req, res) {
     const user = await registerUser({
       name: req.body.nombre,
       email: req.body.email,
-      password: req.body.password
+      password: req.body.password,
+      role: req.body.rol || 'capitan'
     });
 
     req.session.user = {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role,
+      teamName: user.teamName
     };
 
-    return res.redirect('/');
+    return res.redirect(user.role === 'admin' ? '/admin' : '/capitan');
   } catch (error) {
     return renderAuthPage(res, 'register', 'Registro | Interclases LJV', {
       error: error.message,
@@ -46,10 +49,12 @@ async function login(req, res) {
     req.session.user = {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role,
+      teamName: user.teamName
     };
 
-    return res.redirect('/');
+    return res.redirect(user.role === 'admin' ? '/admin' : '/capitan');
   } catch (error) {
     return renderAuthPage(res, 'login', 'Iniciar sesión | Interclases LJV', {
       error: error.message,
