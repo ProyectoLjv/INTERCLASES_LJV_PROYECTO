@@ -6,12 +6,19 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
+<body class="modal-open">
   <header class="site-header">
-    <div>
+    <div class="site-brand">
+      <img
+        class="site-logo"
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjyPasuwCjM-T9wsh9KY8AYvZD7m4WFiufQGn7CtHjNLxS7BpOdR9xHB2v&s=10"
+        alt="Logo de la Institución Educativa Lucrecio Jaramillo Vélez"
+      >
+      <div>
       <p class="eyebrow">LJV / TEMPORADA 2026</p>
       <h1>Interclases de futbol</h1>
       <p>Lucrecio Jaramillo Velez</p>
+      </div>
     </div>
     <div class="header-actions">
       <% if (user) { %>
@@ -73,6 +80,38 @@
     </section>
   </main>
 
-  <footer>Interclases LJV · Lucrecio Jaramillo Velez</footer>
+  <footer>
+    <p>Institución Educativa Lucrecio Jaramillo Vélez</p>
+    <p class="sede-principal">Sede Principal</p>
+    <p>Dirección: Carrera 79 No. 38 - 59 Barrio Laureles, Medellín, Antioquia, Colombia</p>
+  </footer>
+
+  <div class="welcome-modal" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <div class="welcome-card">
+      <button class="welcome-close" type="button" aria-label="Cerrar mensaje de bienvenida">&times;</button>
+      <p class="eyebrow welcome-season">LJV / TEMPORADA 2026</p>
+      <h2 id="welcome-title">¡Bienvenidos!</h2>
+      <p>Bienvenidos a las Interclases del colegio Lucrecio Jaramillo Vélez.</p>
+      <button class="btn btn-primary welcome-button" type="button">Continuar</button>
+    </div>
+  </div>
+
+  <script>
+    const welcomeModal = document.getElementById('welcome-modal');
+    const closeWelcomeButtons = welcomeModal.querySelectorAll('.welcome-close, .welcome-button');
+
+    function closeWelcomeModal() {
+      welcomeModal.classList.add('is-hidden');
+      document.body.classList.remove('modal-open');
+    }
+
+    closeWelcomeButtons.forEach((button) => button.addEventListener('click', closeWelcomeModal));
+    welcomeModal.addEventListener('click', (event) => {
+      if (event.target === welcomeModal) closeWelcomeModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeWelcomeModal();
+    });
+  </script>
 </body>
 </html>

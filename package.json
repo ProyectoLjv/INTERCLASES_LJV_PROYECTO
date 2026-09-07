@@ -4,6 +4,7 @@
   "description": "Plataforma MVC para las Interclases de Futbol del Colegio Lucrecio Jaramillo Velez",
   "main": "server.js",
   "scripts": {
+    "devv": "node index.js",
     "dev": "node --watch server.js",
     "start": "node server.js",
     "test": "node --test"
@@ -19,8 +20,5 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "sqlite3": "^6.0.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
   }
 }
