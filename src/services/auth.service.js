@@ -89,7 +89,7 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
           nombre TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
           password_hash TEXT NOT NULL,
-          rol TEXT NOT NULL DEFAULT 'capitan',
+          rol TEXT NOT NULL DEFAULT 'student',
           nombre_equipo TEXT,
           creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
@@ -100,8 +100,9 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
         }
 
         try {
-          await addMissingColumn(db, 'usuarios', 'rol', "TEXT NOT NULL DEFAULT 'capitan'");
+          await addMissingColumn(db, 'usuarios', 'rol', "TEXT NOT NULL DEFAULT 'student'");
           await addMissingColumn(db, 'usuarios', 'nombre_equipo', 'TEXT');
+          await runQuery(db, "UPDATE usuarios SET rol = 'student' WHERE rol IS NULL OR rol = 'capitan'");
         } catch (migrationError) {
           reject(migrationError);
           return;
@@ -126,6 +127,9 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nombre TEXT NOT NULL UNIQUE,
           categoria TEXT NOT NULL,
+          puntos INTEGER NOT NULL DEFAULT 0,
+          goles_favor INTEGER NOT NULL DEFAULT 0,
+          goles_contra INTEGER NOT NULL DEFAULT 0,
           creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
       `, async (error) => {
@@ -136,6 +140,9 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
 
         try {
           await addMissingColumn(db, 'equipos', 'categoria', 'TEXT NOT NULL DEFAULT "General"');
+          await addMissingColumn(db, 'equipos', 'puntos', 'INTEGER NOT NULL DEFAULT 0');
+          await addMissingColumn(db, 'equipos', 'goles_favor', 'INTEGER NOT NULL DEFAULT 0');
+          await addMissingColumn(db, 'equipos', 'goles_contra', 'INTEGER NOT NULL DEFAULT 0');
         } catch (migrationError) {
           reject(migrationError);
           return;
@@ -183,10 +190,32 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
           await addMissingColumn(db, 'partidos', 'goles_local', 'INTEGER DEFAULT 0');
           await addMissingColumn(db, 'partidos', 'goles_visitante', 'INTEGER DEFAULT 0');
           await addMissingColumn(db, 'partidos', 'resultado', 'TEXT');
+          await addMissingColumn(db, 'partidos', 'cancha', 'TEXT');
         } catch (migrationError) {
           reject(migrationError);
           return;
         }
+      });
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS configuracion_popup (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          titulo TEXT NOT NULL DEFAULT '¡Bienvenidos!',
+          mensaje TEXT NOT NULL DEFAULT 'Bienvenidos a las Interclases del colegio Lucrecio Jaramillo Vélez.',
+          activo INTEGER NOT NULL DEFAULT 1
+        )
+      `, (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        db.run(
+          `INSERT OR IGNORE INTO configuracion_popup (id) VALUES (1)`,
+          (seedError) => {
+            if (seedError) reject(seedError);
+          }
+        );
       });
 
       db.run(`
@@ -214,37 +243,36 @@ function initDatabase(dbPath = DEFAULT_DB_PATH) {
 }
 
 async function ensureDefaultAdmin(dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
-  const adminEmail = 'admin@ljv.local';
-  const adminPassword = 'admin123';
-  const adminHash = await bcrypt.hash(adminPassword, 10);
-
-  const existing = await getQuery(db, 'SELECT id FROM usuarios WHERE email = ?', [adminEmail]);
-
-  if (!existing) {
-    await runQuery(db, 'INSERT INTO usuarios (nombre, email, password_hash, rol, nombre_equipo) VALUES (?, ?, ?, ?, ?)', ['Administrador', adminEmail, adminHash, 'admin', null]);
-  }
+  return dbPath;
 }
 
-async function registerUser({ name, email, password, role = 'capitan', teamName }, dbPath = DEFAULT_DB_PATH) {
+async function registerUser({ name, email, password, role = 'student', teamName }, dbPath = DEFAULT_DB_PATH) {
   await initDatabase(dbPath);
 
   const trimmedName = String(name || '').trim();
   const trimmedEmail = String(email || '').trim().toLowerCase();
   const trimmedPassword = String(password || '').trim();
-  const normalizedRole = String(role || 'capitan').trim().toLowerCase();
+  const normalizedRole = String(role || 'student').trim().toLowerCase();
   const trimmedTeamName = teamName ? String(teamName).trim() : null;
 
   if (!trimmedName || !trimmedEmail || !trimmedPassword) {
     throw new Error('Todos los campos son obligatorios.');
   }
 
-  if (!['admin', 'capitan'].includes(normalizedRole)) {
-    throw new Error('El rol debe ser administrador o capitán.');
+  if (trimmedName.length < 3) {
+    throw new Error('El nombre debe tener al menos 3 caracteres.');
   }
 
-  if (trimmedPassword.length < 6) {
-    throw new Error('La contraseña debe tener al menos 6 caracteres.');
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+(?: [A-Za-zÁÉÍÓÚáéíóúÜüÑñ]+)*$/.test(trimmedName)) {
+    throw new Error('El nombre solo puede contener letras y espacios.');
+  }
+
+  if (!['admin', 'student'].includes(normalizedRole)) {
+    throw new Error('El rol no es válido.');
+  }
+
+  if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(trimmedPassword)) {
+    throw new Error('La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un carácter especial.');
   }
 
   const passwordHash = await bcrypt.hash(trimmedPassword, 10);
@@ -254,7 +282,7 @@ async function registerUser({ name, email, password, role = 'capitan', teamName 
     const result = await runQuery(
       db,
       'INSERT INTO usuarios (nombre, email, password_hash, rol, nombre_equipo) VALUES (?, ?, ?, ?, ?)',
-      [trimmedName, trimmedEmail, passwordHash, normalizedRole, normalizedRole === 'capitan' ? trimmedTeamName : null]
+      [trimmedName, trimmedEmail, passwordHash, normalizedRole, normalizedRole === 'student' ? trimmedTeamName : null]
     );
 
     return {
@@ -262,7 +290,7 @@ async function registerUser({ name, email, password, role = 'capitan', teamName 
       name: trimmedName,
       email: trimmedEmail,
       role: normalizedRole,
-      teamName: normalizedRole === 'capitan' ? trimmedTeamName : null
+      teamName: normalizedRole === 'student' ? trimmedTeamName : null
     };
   } catch (error) {
     if (error && error.code === 'SQLITE_CONSTRAINT') {
@@ -304,7 +332,7 @@ async function loginUser({ email, password }, dbPath = DEFAULT_DB_PATH) {
       id: user.id,
       name: user.nombre,
       email: user.email,
-      role: user.rol || (trimmedEmail === 'admin@ljv.local' ? 'admin' : 'capitan'),
+      role: user.rol === 'admin' ? 'admin' : 'student',
       teamName: user.nombre_equipo
     };
   } catch (error) {

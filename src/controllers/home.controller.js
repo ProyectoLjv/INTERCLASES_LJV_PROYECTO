@@ -1,5 +1,6 @@
 // Importa el servicio que contiene la logica del torneo.
 const tournamentService = require('../services/tournament.service');
+const { getPopup } = require('../services/admin.service');
 
 // Atiende la solicitud de la pagina principal.
 async function showHome(req, res, next) {
@@ -7,6 +8,7 @@ async function showHome(req, res, next) {
   try {
     const summary = await tournamentService.getSummary();
     const matches = await tournamentService.getMatches();
+    const popup = await getPopup();
 
     // Renderiza index.ejs y le entrega los datos necesarios.
     res.render('index', {
@@ -16,6 +18,8 @@ async function showHome(req, res, next) {
       summary,
       // Entrega la lista de partidos para mostrarla en la vista.
       matches,
+      popup,
+      error: req.query.error || null,
       user: req.session && req.session.user ? req.session.user : null
     });
   // Captura cualquier error ocurrido durante el renderizado.

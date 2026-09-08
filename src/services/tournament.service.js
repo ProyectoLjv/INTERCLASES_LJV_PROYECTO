@@ -41,6 +41,7 @@ async function getMatches(dbPath = DEFAULT_DB_PATH) {
           awayTeamId: match.equipo_visitante_id,
           date: match.fecha_partido,
           time: match.hora_partido,
+          field: match.cancha,
           status: match.estado,
           homeScore: match.goles_local,
           awayScore: match.goles_visitante,

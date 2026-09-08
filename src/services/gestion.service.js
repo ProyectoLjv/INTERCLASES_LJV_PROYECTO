@@ -59,17 +59,17 @@ async function addJugador({ equipoId, nombre, posicion }, dbPath = DEFAULT_DB_PA
   };
 }
 
-async function createPartido({ equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, estado = 'Programado' }, dbPath = DEFAULT_DB_PATH) {
+async function createPartido({ equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, cancha, estado = 'Pendiente' }, dbPath = DEFAULT_DB_PATH) {
   const db = openDatabase(dbPath);
 
-  if (!equipoLocalId || !equipoVisitanteId || !fechaPartido || !horaPartido) {
+  if (!equipoLocalId || !equipoVisitanteId || equipoLocalId === equipoVisitanteId || !fechaPartido || !horaPartido || !cancha) {
     throw new Error('Faltan datos para crear el partido.');
   }
 
   const result = await runQuery(
     db,
-    'INSERT INTO partidos (equipo_local_id, equipo_visitante_id, fecha_partido, hora_partido, estado) VALUES (?, ?, ?, ?, ?)',
-    [Number(equipoLocalId), Number(equipoVisitanteId), fechaPartido, horaPartido, estado]
+    'INSERT INTO partidos (equipo_local_id, equipo_visitante_id, fecha_partido, hora_partido, cancha, estado) VALUES (?, ?, ?, ?, ?, ?)',
+    [Number(equipoLocalId), Number(equipoVisitanteId), fechaPartido, horaPartido, String(cancha).trim(), estado]
   );
 
   return {
@@ -78,6 +78,7 @@ async function createPartido({ equipoLocalId, equipoVisitanteId, fechaPartido, h
     equipoVisitanteId: Number(equipoVisitanteId),
     fechaPartido,
     horaPartido,
+    cancha: String(cancha).trim(),
     estado
   };
 }
@@ -124,10 +125,13 @@ async function listarPartidos(dbPath = DEFAULT_DB_PATH) {
 
   return rows.map((partido) => ({
     id: partido.id,
+    equipo_local_id: partido.equipo_local_id,
+    equipo_visitante_id: partido.equipo_visitante_id,
     equipo_local: partido.equipo_local,
     equipo_visitante: partido.equipo_visitante,
     fecha_partido: partido.fecha_partido,
     hora_partido: partido.hora_partido,
+    cancha: partido.cancha,
     estado: partido.estado,
     goles_local: partido.goles_local,
     goles_visitante: partido.goles_visitante,

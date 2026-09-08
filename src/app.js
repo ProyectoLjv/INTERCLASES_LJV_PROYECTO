@@ -7,6 +7,7 @@ const session = require('express-session');
 const webRoutes = require('./routes/web.routes');
 // Importa las rutas que devuelven datos en formato JSON.
 const apiRoutes = require('./routes/api.routes');
+const adminRoutes = require('./routes/adminRoutes');
 // Importa el middleware global para manejar errores.
 const errorHandler = require('./middlewares/error-handler');
 const { initDatabase } = require('./services/auth.service');
@@ -41,6 +42,7 @@ initDatabase().catch((error) => {
 });
 
 // Registra las rutas de las paginas web desde la raiz del sitio.
+app.use('/admin', adminRoutes);
 app.use('/', webRoutes);
 // Registra las rutas de la API con el prefijo /api.
 app.use('/api', apiRoutes);

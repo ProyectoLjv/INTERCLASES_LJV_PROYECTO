@@ -107,6 +107,16 @@ h2 { font-size: clamp(2rem, 4vw, 3.3rem); line-height: .95; }
 .nav-links a:hover, .nav-links a:focus-visible { background: #eef5e8; color: #0E6B4E; }
 .header-actions { align-items: stretch; display: flex; flex-direction: column; gap: 8px; }
 .header-actions .btn { text-align: center; }
+.profile-menu { position: relative; }
+.profile-trigger { align-items: center; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; color: white; cursor: pointer; display: flex; gap: 8px; list-style: none; max-width: 100%; padding: 8px 12px; }
+.profile-trigger::-webkit-details-marker { display: none; }
+.profile-icon { fill: none; height: 20px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 20px; }
+.profile-icon circle { fill: currentColor; stroke: none; }
+.profile-dropdown { background: white; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 28px rgba(20,33,29,.18); color: var(--ink); min-width: 180px; padding: 8px; position: absolute; right: 0; top: calc(100% + 8px); z-index: 12; }
+.profile-dropdown a, .profile-role { display: block; padding: 9px 10px; }
+.profile-role { color: #52615a; font-size: .78rem; }
+.profile-dropdown a { border-radius: 8px; color: var(--green); font-weight: 700; text-decoration: none; }
+.profile-dropdown a:hover, .profile-dropdown a:focus-visible { background: #eef5e8; }
 .user-badge { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; color: white; font-size: .8rem; font-weight: 700; padding: 9px 12px; }
 .btn { border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; padding: 12px 18px; text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
 .btn:hover { transform: translateY(-1px); }
@@ -121,7 +131,23 @@ h2 { font-size: clamp(2rem, 4vw, 3.3rem); line-height: .95; }
 .auth-brand p:last-child { color: #52615a; line-height: 1.6; margin: 0 0 24px; }
 .auth-form { display: flex; flex-direction: column; gap: 18px; }
 .auth-form label { display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: var(--ink); }
+.field-help { color: #52615a; font-size: .78rem; font-weight: 400; line-height: 1.4; }
+.field-help.is-invalid, .password-requirements li.is-invalid { color: #b42318; }
+.field-help.is-valid, .password-requirements li.is-valid { color: #18794e; }
+.password-requirements { color: #52615a; display: grid; font-size: .78rem; gap: 4px; line-height: 1.35; list-style: none; margin: -2px 0 0; padding: 0; }
+.password-requirements li::before { content: '\2022'; display: inline-block; margin-right: 7px; }
+.password-requirements li.is-invalid::before { content: '\2715'; }
+.password-requirements li.is-valid::before { content: '\2713'; }
 .auth-form input { border: 1px solid var(--line); border-radius: 12px; font: inherit; padding: 12px 14px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 48px; width: 100%; }
+.password-toggle { align-items: center; background: transparent; border: 0; border-radius: 9px; color: #52615a; cursor: pointer; display: flex; height: 34px; justify-content: center; padding: 0; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); transition: background .2s ease, color .2s ease; width: 34px; }
+.password-toggle:hover, .password-toggle:focus-visible { background: #eef5e8; color: var(--green); }
+.password-toggle:focus-visible { outline: 3px solid rgba(14, 107, 77, .16); }
+.eye-icon { display: block; fill: none; height: 18px; overflow: visible; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 18px; }
+.eye-icon circle { fill: currentColor; stroke: none; }
+.eye-slash { display: none; }
+.password-toggle[aria-pressed="true"] .eye-slash { display: block; }
 .auth-form input:focus { border-color: var(--green); outline: 3px solid rgba(14, 107, 77, .12); }
 .auth-form button { background: var(--green); border: none; border-radius: 12px; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 14px 18px; }
 .auth-alert { border-radius: 10px; margin-bottom: 16px; padding: 12px 14px; font-weight: 600; }

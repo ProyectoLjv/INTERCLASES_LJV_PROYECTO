@@ -7,6 +7,7 @@
     "devv": "node index.js",
     "dev": "node --watch server.js",
     "start": "node server.js",
+    "seed:admin": "node scripts/seedAdmin.js",
     "test": "node --test"
   },
   "keywords": [],

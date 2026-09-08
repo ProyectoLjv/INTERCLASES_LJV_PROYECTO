@@ -7,50 +7,13 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="modal-open">
-  <header class="site-header">
-    <nav class="site-nav" aria-label="Navegación principal">
-      <a class="site-brand" href="/" aria-label="Ir al inicio de Interclases LJV">
-      <img
-        class="site-logo"
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjyPasuwCjM-T9wsh9KY8AYvZD7m4WFiufQGn7CtHjNLxS7BpOdR9xHB2v&s=10"
-        alt="Logo de la Institución Educativa Lucrecio Jaramillo Vélez"
-      >
-      <div>
-      <p class="eyebrow banner-season">LJV / TEMPORADA 2026</p>
-      <h1>Interclases de futbol</h1>
-      <p>Lucrecio Jaramillo Velez</p>
-      </div>
-      </a>
-
-      <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="primary-navigation">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="nav-menu" id="primary-navigation">
-        <div class="nav-links">
-          <a href="/">Inicio</a>
-          <a href="#match-carousel">Calendario</a>
-          <a href="#standings">Posiciones</a>
-          <a href="/api/equipos">Equipos</a>
-          <a href="#top-scorers">Goleadores</a>
-        </div>
-        <div class="header-actions">
-      <% if (user) { %>
-        <span class="user-badge">Hola, <%= user.name %></span>
-        <a class="btn btn-secondary" href="/logout">Cerrar sesión</a>
-      <% } else { %>
-        <a class="btn btn-secondary login-button" href="/login">Iniciar sesión</a>
-        <a class="btn btn-primary register-button" href="/registro">Registrarse</a>
-      <% } %>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <%- include('partials/navbar', { user }) %>
 
   <main class="container">
     <section class="match-carousel" id="match-carousel" aria-labelledby="match-carousel-title">
+      <% if (error) { %>
+        <div class="auth-alert error"><%= error %></div>
+      <% } %>
       <div class="match-carousel__heading">
         <div>
           <p class="eyebrow section-eyebrow">Jornada en juego</p>
@@ -197,32 +160,38 @@
     </div>
   </footer>
 
-  <div class="welcome-modal" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-    <div class="welcome-card">
-      <button class="welcome-close" type="button" aria-label="Cerrar mensaje de bienvenida">&times;</button>
-      <p class="eyebrow welcome-season">LJV / TEMPORADA 2026</p>
-      <h2 id="welcome-title">¡Bienvenidos!</h2>
-      <p>Bienvenidos a las Interclases del colegio Lucrecio Jaramillo Vélez.</p>
-      <button class="btn btn-primary welcome-button" type="button">Continuar</button>
+  <% if (popup && popup.activo) { %>
+    <div class="welcome-modal" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+      <div class="welcome-card">
+        <button class="welcome-close" type="button" aria-label="Cerrar mensaje de bienvenida">&times;</button>
+        <p class="eyebrow welcome-season">LJV / TEMPORADA 2026</p>
+        <h2 id="welcome-title"><%= popup.titulo %></h2>
+        <p><%= popup.mensaje %></p>
+        <button class="btn btn-primary welcome-button" type="button">Continuar</button>
+      </div>
     </div>
-  </div>
+  <% } %>
 
   <script>
     const welcomeModal = document.getElementById('welcome-modal');
-    const closeWelcomeButtons = welcomeModal.querySelectorAll('.welcome-close, .welcome-button');
+    if (welcomeModal) {
+      const closeWelcomeButtons = welcomeModal.querySelectorAll('.welcome-close, .welcome-button');
 
-    function closeWelcomeModal() {
-      welcomeModal.classList.add('is-hidden');
+      function closeWelcomeModal() {
+        welcomeModal.classList.add('is-hidden');
+        document.body.classList.remove('modal-open');
+      }
+
+      closeWelcomeButtons.forEach((button) => button.addEventListener('click', closeWelcomeModal));
+      welcomeModal.addEventListener('click', (event) => {
+        if (event.target === welcomeModal) closeWelcomeModal();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeWelcomeModal();
+      });
+    } else {
       document.body.classList.remove('modal-open');
     }
-
-    closeWelcomeButtons.forEach((button) => button.addEventListener('click', closeWelcomeModal));
-    welcomeModal.addEventListener('click', (event) => {
-      if (event.target === welcomeModal) closeWelcomeModal();
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeWelcomeModal();
-    });
   </script>
   <script src="/js/match-carousel.js" defer></script>
   <script src="/js/navigation.js" defer></script>

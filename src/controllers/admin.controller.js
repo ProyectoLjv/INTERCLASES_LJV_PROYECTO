@@ -1,64 +1,79 @@
-const { createPartido, actualizarResultadoPartido, listarPartidos } = require('../services/gestion.service');
-const { getTeams, getMatches } = require('../services/tournament.service');
+const { createEquipo, addJugador, createPartido, actualizarResultadoPartido, listarPartidos } = require('../services/gestion.service');
+const { listAdminTeams, MATCH_STATUSES, getPopup, updatePopup, listPlayers, updateTeamStats, updateMatch, deleteMatch, deletePlayer } = require('../services/admin.service');
 
-async function dashboard(req, res) {
+async function dashboardData() {
+  const [equipos, partidos, popup, jugadores] = await Promise.all([
+    listAdminTeams(),
+    listarPartidos(),
+    getPopup(),
+    listPlayers()
+  ]);
+
+  return { equipos, partidos, popup, jugadores, estadosPartido: MATCH_STATUSES };
+}
+
+async function renderDashboard(req, res, { error = null, success = null } = {}) {
   try {
-    const equipos = await getTeams();
-    const partidos = await listarPartidos();
-
-    res.render('admin/dashboard', {
+    const data = await dashboardData();
+    return res.render('admin/dashboard', {
       title: 'Panel administrador | Interclases LJV',
       user: req.session.user,
-      equipos,
-      partidos,
-      error: null,
-      success: null
+      error,
+      success,
+      ...data
     });
-  } catch (error) {
-    res.status(500).render('admin/dashboard', {
+  } catch (loadError) {
+    return res.status(500).render('admin/dashboard', {
       title: 'Panel administrador | Interclases LJV',
       user: req.session.user,
       equipos: [],
       partidos: [],
-      error: error.message,
+      popup: { titulo: '', mensaje: '', activo: 0 },
+      jugadores: [],
+      estadosPartido: MATCH_STATUSES,
+      error: loadError.message,
       success: null
     });
   }
 }
 
+function dashboard(req, res) {
+  return renderDashboard(req, res);
+}
+
+async function guardarPopup(req, res) {
+  try {
+    await updatePopup(req.body);
+    return renderDashboard(req, res, { success: 'Configuración del pop-up actualizada.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
 async function guardarPartido(req, res) {
   try {
-    const partido = await createPartido({
-      equipoLocalId: req.body.equipoLocalId,
-      equipoVisitanteId: req.body.equipoVisitanteId,
-      fechaPartido: req.body.fechaPartido,
-      horaPartido: req.body.horaPartido,
-      estado: req.body.estado || 'Programado'
-    });
-
-    const equipos = await getTeams();
-    const partidos = await listarPartidos();
-
-    res.render('admin/dashboard', {
-      title: 'Panel administrador | Interclases LJV',
-      user: req.session.user,
-      equipos,
-      partidos,
-      error: null,
-      success: `Partido programado correctamente para ${partido.fechaPartido} a las ${partido.horaPartido}.`
-    });
+    await createPartido(req.body);
+    return renderDashboard(req, res, { success: 'Partido creado correctamente.' });
   } catch (error) {
-    const equipos = await getTeams();
-    const partidos = await listarPartidos();
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
 
-    res.render('admin/dashboard', {
-      title: 'Panel administrador | Interclases LJV',
-      user: req.session.user,
-      equipos,
-      partidos,
-      error: error.message,
-      success: null
-    });
+async function editarPartido(req, res) {
+  try {
+    await updateMatch({ ...req.body, matchId: req.params.id });
+    return renderDashboard(req, res, { success: 'Partido actualizado correctamente.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
+async function eliminarPartido(req, res) {
+  try {
+    await deleteMatch(req.params.id);
+    return renderDashboard(req, res, { success: 'Partido eliminado correctamente.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
   }
 }
 
@@ -69,31 +84,57 @@ async function guardarResultado(req, res) {
       golesLocal: req.body.golesLocal,
       golesVisitante: req.body.golesVisitante
     });
-
-    const equipos = await getTeams();
-    const partidos = await listarPartidos();
-
-    res.render('admin/dashboard', {
-      title: 'Panel administrador | Interclases LJV',
-      user: req.session.user,
-      equipos,
-      partidos,
-      error: null,
-      success: `Resultado actualizado: ${resultado.resultado}`
-    });
+    return renderDashboard(req, res, { success: `Resultado actualizado: ${resultado.resultado}` });
   } catch (error) {
-    const equipos = await getTeams();
-    const partidos = await listarPartidos();
-
-    res.render('admin/dashboard', {
-      title: 'Panel administrador | Interclases LJV',
-      user: req.session.user,
-      equipos,
-      partidos,
-      error: error.message,
-      success: null
-    });
+    return renderDashboard(req, res, { error: error.message });
   }
 }
 
-module.exports = { dashboard, guardarPartido, guardarResultado };
+async function guardarEquipo(req, res) {
+  try {
+    await createEquipo(req.body);
+    return renderDashboard(req, res, { success: 'Equipo creado correctamente.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
+async function guardarEstadisticasEquipo(req, res) {
+  try {
+    await updateTeamStats({ ...req.body, teamId: req.params.id });
+    return renderDashboard(req, res, { success: 'Posición y estadísticas actualizadas.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
+async function guardarJugador(req, res) {
+  try {
+    await addJugador(req.body);
+    return renderDashboard(req, res, { success: 'Jugador agregado a la plantilla.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
+async function eliminarJugador(req, res) {
+  try {
+    await deletePlayer(req.params.id);
+    return renderDashboard(req, res, { success: 'Jugador eliminado de la plantilla.' });
+  } catch (error) {
+    return renderDashboard(req, res, { error: error.message });
+  }
+}
+
+module.exports = {
+  dashboard,
+  guardarPopup,
+  guardarPartido,
+  editarPartido,
+  eliminarPartido,
+  guardarResultado,
+  guardarEquipo,
+  guardarEstadisticasEquipo,
+  guardarJugador,
+  eliminarJugador
+};

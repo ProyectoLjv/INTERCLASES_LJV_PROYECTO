@@ -11,23 +11,23 @@ const { initDatabase, registerUser, loginUser } = require('../src/services/auth.
     const user = await registerUser({
       name: 'Ana',
       email: 'ana@ejemplo.com',
-      password: '123456',
-      role: 'capitan',
+      password: 'PruebaSegura1!',
+      role: 'student',
       teamName: 'Los Halcones'
     }, dbPath);
 
     assert.equal(user.name, 'Ana');
-    assert.equal(user.role, 'capitan');
+    assert.equal(user.role, 'student');
     assert.ok(user.id > 0);
 
     const sessionUser = await loginUser({
       email: 'ana@ejemplo.com',
-      password: '123456',
+      password: 'PruebaSegura1!',
       role: 'capitan'
     }, dbPath);
 
     assert.equal(sessionUser.email, 'ana@ejemplo.com');
-    assert.equal(sessionUser.role, 'capitan');
+    assert.equal(sessionUser.role, 'student');
   });
 
   test('loginUser infiere el rol desde la cuenta registrada', async () => {
@@ -37,13 +37,13 @@ const { initDatabase, registerUser, loginUser } = require('../src/services/auth.
     await registerUser({
       name: 'Admin Test',
       email: 'admin@ejemplo.com',
-      password: '123456',
+      password: 'PruebaSegura1!',
       role: 'admin'
     }, dbPath);
 
     const sessionUser = await loginUser({
       email: 'admin@ejemplo.com',
-      password: '123456'
+      password: 'PruebaSegura1!'
     }, dbPath);
 
     assert.equal(sessionUser.role, 'admin');
