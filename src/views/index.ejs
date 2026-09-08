@@ -15,7 +15,7 @@
         alt="Logo de la Institución Educativa Lucrecio Jaramillo Vélez"
       >
       <div>
-      <p class="eyebrow">LJV / TEMPORADA 2026</p>
+      <p class="eyebrow banner-season">LJV / TEMPORADA 2026</p>
       <h1>Interclases de futbol</h1>
       <p>Lucrecio Jaramillo Velez</p>
       </div>
@@ -25,20 +25,65 @@
         <span class="user-badge">Hola, <%= user.name %></span>
         <a class="btn btn-secondary" href="/logout">Cerrar sesión</a>
       <% } else { %>
-        <a class="btn btn-secondary" href="/login">Iniciar sesión</a>
-        <a class="btn btn-primary" href="/registro">Registrarse</a>
+        <a class="btn btn-secondary login-button" href="/login">Iniciar sesión</a>
+        <a class="btn btn-primary register-button" href="/registro">Registrarse</a>
       <% } %>
     </div>
   </header>
 
   <main class="container">
+    <section class="match-carousel" id="match-carousel" aria-labelledby="match-carousel-title">
+      <div class="match-carousel__heading">
+        <div>
+          <p class="eyebrow section-eyebrow">Jornada en juego</p>
+          <h2 id="match-carousel-title">Proximos partidos</h2>
+        </div>
+        <div class="match-carousel__controls" aria-label="Navegacion de partidos">
+          <button class="match-carousel__arrow" type="button" data-carousel-prev aria-label="Partido anterior">&#8592;</button>
+          <button class="match-carousel__arrow" type="button" data-carousel-next aria-label="Partido siguiente">&#8594;</button>
+        </div>
+      </div>
+
+      <div class="match-carousel__viewport" data-carousel-viewport tabindex="0">
+        <div class="match-carousel__track" data-carousel-track>
+          <% if (matches.length === 0) { %>
+            <article class="match-card match-card--empty" data-carousel-slide>
+              <strong>No hay partidos programados</strong>
+              <span>Los proximos encuentros apareceran aqui cuando sean registrados.</span>
+            </article>
+          <% } else { %>
+            <% matches.forEach((match) => { %>
+              <article class="match-card" data-carousel-slide>
+                <div class="match-card__topline">
+                  <time datetime="<%= match.date %>T<%= match.time %>"><%= match.date %> · <%= match.time %></time>
+                  <span class="match-card__status"><%= match.status %></span>
+                </div>
+                <div class="match-card__teams">
+                  <strong><%= match.homeTeam || 'Equipo local' %></strong>
+                  <span>vs.</span>
+                  <strong><%= match.awayTeam || 'Equipo visitante' %></strong>
+                </div>
+                <div class="match-card__details">
+                  <span><span aria-hidden="true">&#9679;</span> <%= match.field || 'Cancha por confirmar' %></span>
+                  <% if (match.result) { %>
+                    <span><%= match.result %></span>
+                  <% } %>
+                </div>
+              </article>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="match-carousel__dots" data-carousel-dots aria-label="Seleccionar partido"></div>
+    </section>
+
     <section class="hero">
       <div>
-        <p class="eyebrow">Comunidad deportiva</p>
+        <p class="eyebrow section-eyebrow">Comunidad deportiva</p>
         <h2>El colegio se encuentra en la cancha.</h2>
         <p>Consulta equipos, horarios y resultados de las interclases del LJV.</p>
       </div>
-      <div class="ball">LJV</div>
     </section>
 
     <section class="stats" aria-label="Resumen del torneo">
@@ -49,7 +94,7 @@
     <section class="schedule">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Agenda</p>
+          <p class="eyebrow section-eyebrow">Agenda</p>
           <h2>Proximos partidos</h2>
         </div>
         <a href="/api/partidos">Ver API</a>
@@ -80,10 +125,58 @@
     </section>
   </main>
 
-  <footer>
-    <p>Institución Educativa Lucrecio Jaramillo Vélez</p>
-    <p class="sede-principal">Sede Principal</p>
-    <p>Dirección: Carrera 79 No. 38 - 59 Barrio Laureles, Medellín, Antioquia, Colombia</p>
+  <footer class="institution-footer">
+    <div class="institution-card">
+      <div class="institution-heading">
+        <div>
+          <p class="institution-kicker">Información institucional</p>
+          <h2>Institución Educativa Lucrecio Jaramillo Vélez</h2>
+        </div>
+        <img
+          class="institution-crest"
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjyPasuwCjM-T9wsh9KY8AYvZD7m4WFiufQGn7CtHjNLxS7BpOdR9xHB2v&s=10"
+          alt="Escudo de la Institución Educativa Lucrecio Jaramillo Vélez"
+        >
+      </div>
+
+      <div class="institution-details">
+        <section class="institution-location" aria-labelledby="main-campus-title">
+          <h3 id="main-campus-title">Sede Principal</h3>
+          <address>
+            <p><strong>Dirección</strong><br>Carrera 79 No. 38 - 59 Barrio Laureles, Medellín</p>
+            <p><strong>Horario de Atención</strong><br>Lunes a Viernes 8:00 am - 12:00 pm</p>
+            <p><strong>Teléfono</strong><br><a href="tel:+57604">+57 (604)</a></p>
+            <p><strong>Correo Electrónico</strong><br><a href="mailto:direccionlucreciojaramillo@gmail.com">direccionlucreciojaramillo@gmail.com</a></p>
+          </address>
+
+          <div class="institution-socials">
+            <h3>Redes Sociales</h3>
+            <div class="social-links">
+              <a href="https://www.facebook.com/_lucrejar" target="_blank" rel="noreferrer" aria-label="Facebook @_lucrejar">
+                <span class="social-icon social-icon--facebook" aria-hidden="true">f</span>
+                <span>@_lucrejar</span>
+              </a>
+              <a href="https://www.youtube.com/@direccionlucreciojaramillo2193" target="_blank" rel="noreferrer" aria-label="YouTube @direccionlucreciojaramillo2193">
+                <span class="social-icon social-icon--youtube" aria-hidden="true">&#9654;</span>
+                <span>@direccionlucreciojaramillo2193</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="institution-location" aria-labelledby="primary-campus-title">
+          <h3 id="primary-campus-title">Sede Preescolar y Primaria</h3>
+          <address>
+            <p><strong>Dirección</strong><br>Calle 44A No. 75 - 68 Barrio Florida Nueva, Medellín</p>
+          </address>
+        </section>
+      </div>
+
+      <nav class="institution-links" aria-label="Enlaces institucionales">
+        <a href="#politica-datos">Política de tratamiento de datos</a>
+        <a href="#mapa-sitio">Mapa del sitio</a>
+      </nav>
+    </div>
   </footer>
 
   <div class="welcome-modal" id="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
@@ -113,5 +206,6 @@
       if (event.key === 'Escape') closeWelcomeModal();
     });
   </script>
+  <script src="/js/match-carousel.js" defer></script>
 </body>
 </html>
