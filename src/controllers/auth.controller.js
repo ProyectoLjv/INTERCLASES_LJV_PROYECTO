@@ -61,7 +61,7 @@ async function login(req, res) {
       teamName: user.teamName
     };
 
-    return res.redirect(user.role === 'admin' ? '/admin' : '/');
+    return res.redirect('/');
   } catch (error) {
     return renderAuthPage(res, 'login', 'Iniciar sesión | Interclases LJV', {
       error: error.message,

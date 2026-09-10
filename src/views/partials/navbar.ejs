@@ -26,9 +26,6 @@
         <a href="/#standings">Posiciones</a>
         <a href="/api/equipos">Equipos</a>
         <a href="/#top-scorers">Goleadores</a>
-        <% if (user && user.role === 'admin') { %>
-          <a href="/admin">Panel de Administrador</a>
-        <% } %>
       </div>
 
       <div class="header-actions">
@@ -39,10 +36,16 @@
                 <circle cx="12" cy="8" r="3.2"></circle>
                 <path d="M5.5 20c.8-3.2 3-5 6.5-5s5.7 1.8 6.5 5"></path>
               </svg>
-              <span><%= user.nombre || user.name %></span>
+              <% const displayName = user.nombre || user.name || ''; %>
+              <span class="profile-name profile-name--full"><%= displayName %></span>
+              <span class="profile-name profile-name--first"><%= displayName.split(/\s+/)[0] || 'Perfil' %></span>
             </summary>
             <div class="profile-dropdown">
               <span class="profile-role"><%= user.role === 'admin' ? 'Administrador' : 'Estudiante' %></span>
+              <a href="/">Ir al Inicio</a>
+              <% if (user.role === 'admin') { %>
+                <a href="/admin">Panel de Administrador</a>
+              <% } %>
               <a href="/logout">Cerrar sesión</a>
             </div>
           </details>
