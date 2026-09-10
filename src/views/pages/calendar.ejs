@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="calendar-view">
+  <%- include('../partials/navbar', { user }) %>
+
+  <main class="container calendar-main" id="main-content">
+    <!-- Encabezado de la página de Calendario -->
+    <header class="calendar-header">
+      <div class="calendar-header__info">
+        <p class="eyebrow section-eyebrow">TORNEO 2026 · FIXTURE OFICIAL</p>
+        <h1 class="calendar-title">Calendario de Partidos</h1>
+        <p class="calendar-subtitle">
+          Sigue el cronograma oficial, horarios, canchas y marcadores finales de todos los encuentros del torneo Interclases.
+        </p>
+      </div>
+      <div class="calendar-header__stats" aria-label="Resumen de encuentros">
+        <div class="calendar-stat-pill">
+          <span class="calendar-stat-num"><%= (upcoming ? upcoming.length : 0) + (finished ? finished.length : 0) %></span>
+          <span class="calendar-stat-label">Total Partidos</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Barra de pestañas para alternar entre Programados y Jugados -->
+    <nav class="calendar-tabs-wrapper" aria-label="Filtro de partidos">
+      <div class="calendar-tabs" role="tablist" aria-label="Categorías del calendario">
+        <button
+          type="button"
+          class="calendar-tab <%= activeTab === 'proximos' ? 'is-active' : '' %>"
+          role="tab"
+          id="tab-proximos"
+          aria-selected="<%= activeTab === 'proximos' ? 'true' : 'false' %>"
+          aria-controls="panel-proximos"
+          tabindex="<%= activeTab === 'proximos' ? '0' : '-1' %>"
+          data-tab-target="proximos"
+        >
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>Próximos Partidos</span>
+          <span class="tab-counter" aria-label="<%= upcoming ? upcoming.length : 0 %> partidos programados">
+            <%= upcoming ? upcoming.length : 0 %>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="calendar-tab <%= activeTab === 'jugados' ? 'is-active' : '' %>"
+          role="tab"
+          id="tab-jugados"
+          aria-selected="<%= activeTab === 'jugados' ? 'true' : 'false' %>"
+          aria-controls="panel-jugados"
+          tabindex="<%= activeTab === 'jugados' ? '0' : '-1' %>"
+          data-tab-target="jugados"
+        >
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-2.34"></path>
+            <path d="M14 14.66V17c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-2.34"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+          <span>Partidos Jugados / Resultados</span>
+          <span class="tab-counter" aria-label="<%= finished ? finished.length : 0 %> partidos jugados">
+            <%= finished ? finished.length : 0 %>
+          </span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Panel 1: Próximos Partidos (Programados / En Vivo) -->
+    <section
+      id="panel-proximos"
+      role="tabpanel"
+      aria-labelledby="tab-proximos"
+      class="calendar-panel <%= activeTab === 'proximos' ? 'is-active' : '' %>"
+      tabindex="0"
+    >
+      <div class="calendar-panel__header">
+        <h2 class="calendar-panel__title">Encuentros Programados</h2>
+        <span class="calendar-panel__meta">
+          <%= upcoming && upcoming.length > 0 ? `${upcoming.length} partido(s) por disputarse` : 'Sin partidos pendientes' %>
+        </span>
+      </div>
+
+      <% if (!upcoming || upcoming.length === 0) { %>
+        <div class="calendar-empty">
+          <div class="calendar-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+              <circle cx="12" cy="15" r="2"></circle>
+            </svg>
+          </div>
+          <h3>No hay partidos programados</h3>
+          <p>Actualmente no hay encuentros pendientes en el calendario. Vuelve a consultar pronto o comunícate con la coordinación deportiva.</p>
+        </div>
+      <% } else { %>
+        <div class="calendar-grid">
+          <% upcoming.forEach((match) => { %>
+            <article class="calendar-card calendar-card--upcoming <%= match.status === 'En Vivo' ? 'calendar-card--live' : '' %>">
+              <div class="calendar-card__top">
+                <div class="calendar-card__date">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <time datetime="<%= match.date %>T<%= match.time %>">
+                    <%= match.date %> · <%= match.time %>
+                  </time>
+                </div>
+                <% if (match.status === 'En Vivo') { %>
+                  <span class="calendar-badge calendar-badge--live">
+                    <span class="live-dot" aria-hidden="true"></span>
+                    En Vivo
+                  </span>
+                <% } else { %>
+                  <span class="calendar-badge calendar-badge--scheduled">Por Jugar</span>
+                <% } %>
+              </div>
+
+              <div class="calendar-card__matchup">
+                <div class="matchup-team matchup-team--home">
+                  <span class="matchup-tag">Local</span>
+                  <strong class="matchup-name"><%= match.homeTeam %></strong>
+                </div>
+
+                <div class="matchup-versus" aria-label="Versus">
+                  <span class="matchup-vs-circle">VS</span>
+                </div>
+
+                <div class="matchup-team matchup-team--away">
+                  <span class="matchup-tag">Visitante</span>
+                  <strong class="matchup-name"><%= match.awayTeam %></strong>
+                </div>
+              </div>
+
+              <div class="calendar-card__bottom">
+                <div class="calendar-card__field">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span><%= match.field %></span>
+                </div>
+                <span class="calendar-card__status-hint">Fase de Grupos</span>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- Panel 2: Partidos Jugados / Resultados -->
+    <section
+      id="panel-jugados"
+      role="tabpanel"
+      aria-labelledby="tab-jugados"
+      class="calendar-panel <%= activeTab === 'jugados' ? 'is-active' : '' %>"
+      tabindex="0"
+    >
+      <div class="calendar-panel__header">
+        <h2 class="calendar-panel__title">Resultados de Partidos Jugados</h2>
+        <span class="calendar-panel__meta">
+          <%= finished && finished.length > 0 ? `${finished.length} partido(s) completado(s)` : 'Sin resultados registrados' %>
+        </span>
+      </div>
+
+      <% if (!finished || finished.length === 0) { %>
+        <div class="calendar-empty">
+          <div class="calendar-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+              <path d="M4 22h16"></path>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg>
+          </div>
+          <h3>Aún no hay partidos finalizados</h3>
+          <p>Los marcadores y resultados de los encuentros concluidos se visualizarán en esta sección una vez termine cada jornada.</p>
+        </div>
+      <% } else { %>
+        <div class="calendar-grid">
+          <% finished.forEach((match) => { %>
+            <article class="calendar-card calendar-card--finished">
+              <div class="calendar-card__top">
+                <div class="calendar-card__date">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <time datetime="<%= match.date %>"><%= match.date %></time>
+                </div>
+                <span class="calendar-badge calendar-badge--finished">Finalizado</span>
+              </div>
+
+              <!-- Marcador destacado -->
+              <div class="calendar-card__scoreboard">
+                <div class="scoreboard-team <%= match.winner === 'home' ? 'is-winner' : '' %>">
+                  <strong class="scoreboard-name"><%= match.homeTeam %></strong>
+                  <span class="matchup-tag">Local</span>
+                </div>
+
+                <div class="scoreboard-digits" aria-label="Marcador <%= match.homeScore %> a <%= match.awayScore %>">
+                  <span class="score-number <%= match.winner === 'home' ? 'score-winner' : '' %>"><%= match.homeScore %></span>
+                  <span class="score-divider">-</span>
+                  <span class="score-number <%= match.winner === 'away' ? 'score-winner' : '' %>"><%= match.awayScore %></span>
+                </div>
+
+                <div class="scoreboard-team <%= match.winner === 'away' ? 'is-winner' : '' %>">
+                  <strong class="scoreboard-name"><%= match.awayTeam %></strong>
+                  <span class="matchup-tag">Visitante</span>
+                </div>
+              </div>
+
+              <div class="calendar-card__bottom">
+                <div class="calendar-card__field">
+                  <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span><%= match.field %></span>
+                </div>
+
+                <div class="calendar-card__result-status">
+                  <% if (match.winner === 'home') { %>
+                    <span class="winner-label">🏆 Ganador: <strong><%= match.homeTeam %></strong></span>
+                  <% } else if (match.winner === 'away') { %>
+                    <span class="winner-label">🏆 Ganador: <strong><%= match.awayTeam %></strong></span>
+                  <% } else { %>
+                    <span class="draw-label">🤝 Empate</span>
+                  <% } %>
+                </div>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </main>
+
+  <!-- Pie de página institucional -->
+  <footer class="institution-footer" id="footer-institucional" aria-labelledby="institution-footer-title">
+    <div class="institution-card">
+      <div class="institution-heading">
+        <div>
+          <p class="institution-kicker">Comunidad Educativa</p>
+          <h2 id="institution-footer-title">Institución Educativa Lucrecio Jaramillo Vélez</h2>
+        </div>
+        <img
+          class="institution-crest"
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjyPasuwCjM-T9wsh9KY8AYvZD7m4WFiufQGn7CtHjNLxS7BpOdR9xHB2v&s=10"
+          alt="Escudo de la Institución Educativa Lucrecio Jaramillo Vélez"
+        >
+      </div>
+
+      <div class="institution-details">
+        <section class="institution-location" aria-labelledby="main-campus-title">
+          <h3 id="main-campus-title">Sede Principal</h3>
+          <address>
+            <p><strong>Dirección</strong><br>Carrera 79 No. 38 - 59 Barrio Laureles, Medellín</p>
+            <p><strong>Horario de Atención</strong><br>Lunes a Viernes 8:00 am - 12:00 pm</p>
+            <p><strong>Teléfono</strong><br><a href="tel:+57604">+57 (604)</a></p>
+            <p><strong>Correo Electrónico</strong><br><a href="mailto:soporte.interclases.ljv@gmail.com">soporte.interclases.ljv@gmail.com</a></p>
+          </address>
+
+          <div class="institution-socials">
+            <h3>Redes Sociales</h3>
+            <div class="social-links">
+              <a href="https://www.instagram.com/lucrecio.jaramillo" target="_blank" rel="noreferrer" aria-label="Instagram lucrecio.jaramillo">
+                <span class="social-icon social-icon--instagram" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+                    <circle cx="12" cy="12" r="3.5"></circle>
+                    <circle class="social-icon__dot" cx="17.2" cy="6.8" r="1"></circle>
+                  </svg>
+                </span>
+                <span>@lucrecio.jaramillo</span>
+              </a>
+              <a href="https://www.tiktok.com/@lucrecio.jaramillo?_r=1&amp;_t=ZS-945swAdCOxO&amp;fbclid=PAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacbWs9aLrCySE82jBBCyA7TL0SErdZE6yi3Qd1G-70RXFiLVPcli809DtGdWA_aem_oqipKY7U8_mnXosoXO1a6Q" target="_blank" rel="noreferrer" aria-label="TikTok lucrecio.jaramillo">
+                <span class="social-icon social-icon--tiktok" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M14 4v10.2a4.3 4.3 0 1 1-3.1-4.1"></path>
+                    <path d="M14 4c.6 2.3 2.1 3.7 4.5 4.2"></path>
+                  </svg>
+                </span>
+                <span>@lucrecio.jaramillo</span>
+              </a>
+              <a href="https://www.youtube.com/@direccionlucreciojaramillo2193" target="_blank" rel="noreferrer" aria-label="YouTube @direccionlucreciojaramillo2193">
+                <span class="social-icon social-icon--youtube" aria-hidden="true">&#9654;</span>
+                <span>@direccionlucreciojaramillo2193</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="institution-location" aria-labelledby="primary-campus-title">
+          <h3 id="primary-campus-title">Sede Preescolar y Primaria</h3>
+          <address>
+            <p><strong>Dirección</strong><br>Calle 44A No. 75 - 68 Barrio Florida Nueva, Medellín</p>
+          </address>
+        </section>
+      </div>
+
+      <nav class="institution-links" aria-label="Enlaces institucionales">
+        <a href="#politica-datos">Política de tratamiento de datos</a>
+        <a href="#mapa-sitio">Mapa del sitio</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/js/navigation.js" defer></script>
+  <script>
+    (function () {
+      const tabs = Array.from(document.querySelectorAll('.calendar-tab'));
+      const panels = Array.from(document.querySelectorAll('.calendar-panel'));
+
+      function activateTab(targetName, updateUrl = true) {
+        tabs.forEach((tab) => {
+          const isSelected = tab.dataset.tabTarget === targetName;
+          tab.classList.toggle('is-active', isSelected);
+          tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+          tab.setAttribute('tabindex', isSelected ? '0' : '-1');
+        });
+
+        panels.forEach((panel) => {
+          const isSelected = panel.id === `panel-${targetName}`;
+          panel.classList.toggle('is-active', isSelected);
+        });
+
+        if (updateUrl && history.replaceState) {
+          const url = new URL(window.location);
+          url.searchParams.set('tab', targetName);
+          history.replaceState(null, '', url);
+        }
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+          activateTab(tab.dataset.tabTarget);
+        });
+
+        tab.addEventListener('keydown', (e) => {
+          let nextIndex = index;
+          if (e.key === 'ArrowRight') {
+            nextIndex = (index + 1) % tabs.length;
+          } else if (e.key === 'ArrowLeft') {
+            nextIndex = (index - 1 + tabs.length) % tabs.length;
+          } else {
+            return;
+          }
+          e.preventDefault();
+          tabs[nextIndex].focus();
+          activateTab(tabs[nextIndex].dataset.tabTarget);
+        });
+      });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      const hash = window.location.hash.replace('#', '');
+
+      if (tabParam === 'jugados' || tabParam === 'resultados' || hash === 'jugados' || hash === 'resultados') {
+        activateTab('jugados', false);
+      } else if (tabParam === 'proximos' || hash === 'proximos') {
+        activateTab('proximos', false);
+      }
+    })();
+  </script>
+  <%- include('../partials/accessibility-settings') %>
+</body>
+</html>
+

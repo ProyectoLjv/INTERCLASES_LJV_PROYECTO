@@ -46,5 +46,25 @@ function showRegister(req, res) {
   });
 }
 
+// Atiende la solicitud del calendario de partidos.
+async function showCalendar(req, res, next) {
+  try {
+    const { upcoming, finished, all } = await tournamentService.getCalendarMatches();
+    const activeTab = req.query.tab === 'jugados' || req.query.tab === 'resultados' ? 'jugados' : 'proximos';
+
+    res.render('pages/calendar', {
+      title: 'Calendario de Partidos | Interclases LJV',
+      upcoming,
+      finished,
+      all,
+      activeTab,
+      currentPath: req.path,
+      user: req.session && req.session.user ? req.session.user : null
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // Exporta el controlador para conectarlo con las rutas web.
-module.exports = { showHome, showLogin, showRegister };
+module.exports = { showHome, showLogin, showRegister, showCalendar };

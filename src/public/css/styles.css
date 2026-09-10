@@ -867,3 +867,676 @@ body.dark-mode .welcome-card .welcome-button:hover {
 .btn-secondary.dark { background: var(--green); border: 1px solid var(--green); color: white; border-radius: 10px; padding: 10px 14px; text-decoration: none; }
 @media (max-width: 760px) { .dashboard-shell { grid-template-columns: 1fr; } .field-row { grid-template-columns: 1fr; } .result-item { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 650px) { .institution-footer { padding: 40px 14px 28px; } .institution-card { padding: 24px; } .institution-heading { align-items: flex-start; flex-direction: column-reverse; gap: 18px; } .institution-crest { height: 84px; width: 84px; } .institution-details { grid-template-columns: 1fr; } .institution-location a, .social-links a { overflow-wrap: anywhere; } }
+
+/* ==========================================================================
+   CALENDARIO DE PARTIDOS (/calendario)
+   ========================================================================== */
+.calendar-main {
+  padding-top: 36px;
+  padding-bottom: 64px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.calendar-header__info {
+  max-width: 680px;
+}
+
+.calendar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 0.95;
+  color: #111827;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.calendar-subtitle {
+  color: #4B5563;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.calendar-stat-pill {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 14px 22px;
+  text-align: center;
+  min-width: 120px;
+}
+
+.calendar-stat-num {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--green);
+}
+
+.calendar-stat-label {
+  display: block;
+  color: #6B7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Pestañas de filtrado */
+.calendar-tabs-wrapper {
+  margin-bottom: 28px;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.calendar-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.calendar-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #4B5563;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding: 12px 18px;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  border-radius: 8px 8px 0 0;
+}
+
+.calendar-tab:hover {
+  color: #111827;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.calendar-tab:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.calendar-tab.is-active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+  background: rgba(46, 125, 50, 0.05);
+}
+
+.tab-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.tab-counter {
+  background: #E5E7EB;
+  border-radius: 9999px;
+  color: #374151;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.calendar-tab.is-active .tab-counter {
+  background: var(--green);
+  color: #FFFFFF;
+}
+
+/* Paneles */
+.calendar-panel {
+  display: none;
+}
+
+.calendar-panel.is-active {
+  display: block;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.calendar-panel__title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1F2937;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.calendar-panel__meta {
+  color: #6B7280;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* Grilla de partidos */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* Tarjeta de partido */
+.calendar-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-left: 5px solid var(--green);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.calendar-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-card--live {
+  border-left-color: #EF4444;
+}
+
+.calendar-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #52615a;
+  margin-bottom: 16px;
+}
+
+.calendar-card__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.meta-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--green);
+}
+
+.calendar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+
+.calendar-badge--scheduled {
+  background: #DCFCE7;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+}
+
+.calendar-badge--finished {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+}
+
+.calendar-badge--live {
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-live 1.5s infinite;
+}
+
+@keyframes pulse-live {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Enfrentamiento programado */
+.calendar-card__matchup {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto 1fr;
+  margin: 12px 0 20px;
+  text-align: center;
+}
+
+.matchup-team {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.matchup-team--home {
+  text-align: left;
+}
+
+.matchup-team--away {
+  text-align: right;
+}
+
+.matchup-tag {
+  color: #6B7280;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.matchup-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #111827;
+  text-transform: uppercase;
+}
+
+.matchup-versus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.matchup-vs-circle {
+  align-items: center;
+  background: #F3F4F6;
+  border-radius: 50%;
+  color: #6B7280;
+  display: flex;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+/* Marcador destacado (partidos jugados) */
+.calendar-card__scoreboard {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto 1fr;
+  margin: 10px 0 18px;
+  text-align: center;
+}
+
+.scoreboard-team {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scoreboard-team:first-child {
+  text-align: left;
+}
+
+.scoreboard-team:last-child {
+  text-align: right;
+}
+
+.scoreboard-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #111827;
+  text-transform: uppercase;
+}
+
+.scoreboard-team.is-winner .scoreboard-name {
+  color: var(--green);
+}
+
+.scoreboard-digits {
+  align-items: center;
+  background: #F8F9FA;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  display: inline-flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 6px 14px;
+}
+
+.score-number {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 0.9;
+  color: #1F2937;
+}
+
+.score-number.score-winner {
+  color: var(--green);
+}
+
+.score-divider {
+  color: #9CA3AF;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 0.9;
+}
+
+/* Parte inferior de tarjeta */
+.calendar-card__bottom {
+  border-top: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.calendar-card__field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.calendar-card__status-hint {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.winner-label {
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.draw-label {
+  color: #4B5563;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Estado vacío (Empty State) */
+.calendar-empty {
+  align-items: center;
+  background: #FFFFFF;
+  border: 2px dashed #E5E7EB;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 56px 24px;
+  text-align: center;
+}
+
+.calendar-empty__icon {
+  align-items: center;
+  background: #F0FDF4;
+  border-radius: 50%;
+  color: var(--green);
+  display: flex;
+  height: 68px;
+  justify-content: center;
+  margin-bottom: 18px;
+  width: 68px;
+}
+
+.calendar-empty__icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.calendar-empty h3 {
+  color: #1F2937;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.calendar-empty p {
+  color: #6B7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 440px;
+}
+
+/* ==========================================================================
+   MODO OSCURO PARA CALENDARIO DE PARTIDOS
+   ========================================================================== */
+body.dark-mode .calendar-title {
+  color: #F8FAFC !important;
+}
+
+body.dark-mode .calendar-subtitle {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .calendar-stat-pill {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.dark-mode .calendar-stat-num {
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .calendar-stat-label {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .calendar-tabs-wrapper {
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .calendar-tab {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .calendar-tab:hover {
+  color: #F8FAFC !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+body.dark-mode .calendar-tab.is-active {
+  color: #4ADE80 !important;
+  border-bottom-color: #22C55E !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+}
+
+body.dark-mode .calendar-tab .tab-counter {
+  background: #334155 !important;
+  color: #CBD5E1 !important;
+}
+
+body.dark-mode .calendar-tab.is-active .tab-counter {
+  background: #166534 !important;
+  color: #86EFAC !important;
+}
+
+body.dark-mode .calendar-panel__title {
+  color: #F8FAFC !important;
+}
+
+body.dark-mode .calendar-panel__meta {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .calendar-card {
+  background-color: #1E293B !important;
+  border: 1px solid #334155 !important;
+  border-left: 5px solid #22C55E !important;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.dark-mode .calendar-card:hover {
+  border-color: #475569 !important;
+  border-left-color: #4ADE80 !important;
+  transform: translateY(-2px);
+}
+
+body.dark-mode .calendar-card--live {
+  border-left-color: #EF4444 !important;
+}
+
+body.dark-mode .calendar-card__top,
+body.dark-mode .calendar-card__bottom {
+  border-color: #334155 !important;
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .meta-icon {
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .calendar-badge--scheduled {
+  background: #14532D !important;
+  border-color: #166534 !important;
+  color: #86EFAC !important;
+}
+
+body.dark-mode .calendar-badge--finished {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #CBD5E1 !important;
+}
+
+body.dark-mode .calendar-badge--live {
+  background: #7F1D1D !important;
+  border-color: #991B1B !important;
+  color: #FECACA !important;
+}
+
+body.dark-mode .matchup-name,
+body.dark-mode .scoreboard-name {
+  color: #F8FAFC !important;
+}
+
+body.dark-mode .scoreboard-team.is-winner .scoreboard-name {
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .matchup-tag {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .matchup-vs-circle {
+  background: #0B1120 !important;
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .scoreboard-digits {
+  background: #0B1120 !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .score-number {
+  color: #F8FAFC !important;
+}
+
+body.dark-mode .score-number.score-winner {
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .winner-label {
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .draw-label {
+  color: #94A3B8 !important;
+}
+
+body.dark-mode .calendar-empty {
+  background-color: #151F30 !important;
+  border: 1.5px dashed #334155 !important;
+  box-shadow: none !important;
+}
+
+body.dark-mode .calendar-empty__icon {
+  background: #1E293B !important;
+  color: #4ADE80 !important;
+}
+
+body.dark-mode .calendar-empty h3 {
+  color: #CBD5E1 !important;
+}
+
+body.dark-mode .calendar-empty p {
+  color: #64748B !important;
+}
+
+/* Responsividad para móviles */
+@media (max-width: 640px) {
+  .calendar-header {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .calendar-stat-pill {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+  .calendar-tab {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}
+

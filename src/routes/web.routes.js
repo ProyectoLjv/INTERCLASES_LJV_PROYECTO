@@ -10,9 +10,11 @@ const router = express.Router();
 
 const registerRoutes = ['/registro', '/register'];
 const loginRoutes = ['/login'];
+const calendarRoutes = ['/calendario', '/calendar'];
 
 // Asocia la URL raiz con el controlador del home.
 router.get('/', homeController.showHome);
+calendarRoutes.forEach((route) => router.get(route, homeController.showCalendar));
 loginRoutes.forEach((route) => router.get(route, homeController.showLogin));
 registerRoutes.forEach((route) => router.get(route, homeController.showRegister));
 loginRoutes.forEach((route) => router.post(route, authController.login));
