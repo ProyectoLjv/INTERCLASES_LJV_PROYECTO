@@ -79,6 +79,9 @@ h2 { font-size: clamp(2rem, 4vw, 3.3rem); line-height: .95; }
 .social-links a { align-items: center; display: inline-flex; gap: 8px; text-decoration: none; }
 .social-icon { align-items: center; background: var(--green); border-radius: 50%; color: white; display: inline-flex; font-size: .9rem; font-weight: 700; height: 28px; justify-content: center; width: 28px; }
 .social-icon--facebook { font-family: Arial, sans-serif; font-size: 1.15rem; }
+.social-icon--instagram svg { fill: none; height: 17px; stroke: currentColor; stroke-width: 1.8; width: 17px; }
+.social-icon--instagram .social-icon__dot { fill: currentColor; stroke: none; }
+.social-icon--tiktok svg { fill: none; height: 18px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; width: 18px; }
 .social-icon--youtube { font-size: .75rem; padding-left: 2px; }
 .institution-links { border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 12px; padding-top: 22px; }
 .institution-links a { text-decoration: none; }
