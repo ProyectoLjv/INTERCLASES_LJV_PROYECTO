@@ -1,0 +1,46 @@
+<div class="floating-tools" aria-label="Herramientas de accesibilidad y configuración">
+  <div class="floating-tool floating-tool--left">
+    <button class="floating-tool__button" id="accessibility-toggle" type="button" aria-label="Abrir opciones de accesibilidad" aria-expanded="false" aria-controls="accessibility-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="4.5" r="2.1"></circle>
+        <path d="M5 8.5h14M12 7v5m0 0-4.5 7m4.5-7 4.5 7M8 8.5l-2 5M16 8.5l2 5"></path>
+      </svg>
+    </button>
+    <section class="floating-panel accessibility-panel" id="accessibility-panel" aria-labelledby="accessibility-title" hidden>
+      <h2 id="accessibility-title">Accesibilidad</h2>
+      <div class="accessibility-actions" aria-label="Tamaño del texto">
+        <button type="button" data-font-action="decrease">A-</button>
+        <button type="button" data-font-action="increase">A+</button>
+      </div>
+      <label class="setting-switch">
+        <span>Alto contraste</span>
+        <input type="checkbox" data-accessibility="contrast">
+        <span class="switch-track" aria-hidden="true"></span>
+      </label>
+      <label class="setting-switch">
+        <span>Lectura clara</span>
+        <input type="checkbox" data-accessibility="reading">
+        <span class="switch-track" aria-hidden="true"></span>
+      </label>
+      <button class="floating-panel__reset" type="button" data-accessibility="reset">Restablecer</button>
+    </section>
+  </div>
+
+  <div class="floating-tool floating-tool--right">
+    <button class="floating-tool__button" id="settings-toggle" type="button" aria-label="Abrir configuración" aria-expanded="false" aria-controls="settings-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3.2"></circle>
+        <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"></path>
+      </svg>
+    </button>
+    <section class="floating-panel settings-panel" id="settings-panel" aria-labelledby="settings-title" hidden>
+      <h2 id="settings-title">Configuración</h2>
+      <label class="setting-switch">
+        <span>Tema oscuro</span>
+        <input type="checkbox" data-theme-toggle>
+        <span class="switch-track" aria-hidden="true"></span>
+      </label>
+    </section>
+  </div>
+</div>
+<script src="/js/accessibility-settings.js" defer></script>
