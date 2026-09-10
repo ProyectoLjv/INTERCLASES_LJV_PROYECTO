@@ -3,7 +3,16 @@
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const theme = savedTheme || (prefersDark ? 'dark' : 'light');
 
+  const savedContrast = localStorage.getItem('accessibility-contrast') === 'true';
+  const savedReading = localStorage.getItem('accessibility-reading') === 'true';
+  const savedFontSize = parseInt(localStorage.getItem('accessibility-font-size'), 10);
+
   document.body.classList.toggle('dark-mode', theme === 'dark');
+  if (savedContrast) document.body.classList.add('high-contrast');
+  if (savedReading) document.body.classList.add('reading-mode');
+  if (savedFontSize && !isNaN(savedFontSize)) {
+    document.documentElement.style.fontSize = `${savedFontSize}%`;
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     const accessibilityToggle = document.querySelector('#accessibility-toggle');
@@ -14,7 +23,7 @@
     const contrastToggle = document.querySelector('[data-accessibility="contrast"]');
     const readingToggle = document.querySelector('[data-accessibility="reading"]');
     const root = document.documentElement;
-    let baseFontSize = 100;
+    let baseFontSize = savedFontSize && !isNaN(savedFontSize) ? savedFontSize : 100;
 
     function setPanel(panel, toggle, isOpen) {
       panel.hidden = !isOpen;
@@ -28,9 +37,9 @@
 
     if (!accessibilityToggle || !accessibilityPanel || !settingsToggle || !settingsPanel) return;
 
-    themeToggle.checked = theme === 'dark';
-    contrastToggle.checked = document.body.classList.contains('high-contrast');
-    readingToggle.checked = document.body.classList.contains('reading-mode');
+    if (themeToggle) themeToggle.checked = theme === 'dark';
+    if (contrastToggle) contrastToggle.checked = savedContrast || document.body.classList.contains('high-contrast');
+    if (readingToggle) readingToggle.checked = savedReading || document.body.classList.contains('reading-mode');
 
     accessibilityToggle.addEventListener('click', () => {
       const isOpen = !accessibilityPanel.hidden;
@@ -52,36 +61,60 @@
       if (event.key === 'Escape') closePanels();
     });
 
-    document.querySelector('[data-font-action="increase"]').addEventListener('click', () => {
-      baseFontSize = Math.min(baseFontSize + 10, 130);
-      root.style.fontSize = `${baseFontSize}%`;
-    });
+    const fontIncreaseBtn = document.querySelector('[data-font-action="increase"]');
+    if (fontIncreaseBtn) {
+      fontIncreaseBtn.addEventListener('click', () => {
+        baseFontSize = Math.min(baseFontSize + 10, 130);
+        root.style.fontSize = `${baseFontSize}%`;
+        localStorage.setItem('accessibility-font-size', baseFontSize);
+      });
+    }
 
-    document.querySelector('[data-font-action="decrease"]').addEventListener('click', () => {
-      baseFontSize = Math.max(baseFontSize - 10, 80);
-      root.style.fontSize = `${baseFontSize}%`;
-    });
+    const fontDecreaseBtn = document.querySelector('[data-font-action="decrease"]');
+    if (fontDecreaseBtn) {
+      fontDecreaseBtn.addEventListener('click', () => {
+        baseFontSize = Math.max(baseFontSize - 10, 80);
+        root.style.fontSize = `${baseFontSize}%`;
+        localStorage.setItem('accessibility-font-size', baseFontSize);
+      });
+    }
 
-    contrastToggle.addEventListener('change', () => {
-      document.body.classList.toggle('high-contrast', contrastToggle.checked);
-    });
+    if (contrastToggle) {
+      contrastToggle.addEventListener('change', () => {
+        const isChecked = contrastToggle.checked;
+        document.body.classList.toggle('high-contrast', isChecked);
+        localStorage.setItem('accessibility-contrast', String(isChecked));
+      });
+    }
 
-    readingToggle.addEventListener('change', () => {
-      document.body.classList.toggle('reading-mode', readingToggle.checked);
-    });
+    if (readingToggle) {
+      readingToggle.addEventListener('change', () => {
+        const isChecked = readingToggle.checked;
+        document.body.classList.toggle('reading-mode', isChecked);
+        localStorage.setItem('accessibility-reading', String(isChecked));
+      });
+    }
 
-    themeToggle.addEventListener('change', () => {
-      const nextTheme = themeToggle.checked ? 'dark' : 'light';
-      document.body.classList.toggle('dark-mode', nextTheme === 'dark');
-      localStorage.setItem('theme', nextTheme);
-    });
+    if (themeToggle) {
+      themeToggle.addEventListener('change', () => {
+        const nextTheme = themeToggle.checked ? 'dark' : 'light';
+        document.body.classList.toggle('dark-mode', nextTheme === 'dark');
+        localStorage.setItem('theme', nextTheme);
+      });
+    }
 
-    document.querySelector('[data-accessibility="reset"]').addEventListener('click', () => {
-      baseFontSize = 100;
-      root.style.fontSize = '';
-      document.body.classList.remove('high-contrast', 'reading-mode');
-      contrastToggle.checked = false;
-      readingToggle.checked = false;
-    });
+    const resetBtn = document.querySelector('[data-accessibility="reset"]');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        baseFontSize = 100;
+        root.style.fontSize = '';
+        document.body.classList.remove('high-contrast', 'reading-mode');
+        if (contrastToggle) contrastToggle.checked = false;
+        if (readingToggle) readingToggle.checked = false;
+        localStorage.removeItem('accessibility-contrast');
+        localStorage.removeItem('accessibility-reading');
+        localStorage.removeItem('accessibility-font-size');
+      });
+    }
   });
 })();
