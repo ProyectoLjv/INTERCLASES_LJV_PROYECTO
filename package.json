@@ -10,6 +10,7 @@
     "seed:admin": "node src/seeds/seedAdminMongo.js",
     "change-pass": "node src/scripts/changePassword.js",
     "list-users": "node src/scripts/listUsers.js",
+    "promote-admins": "node src/scripts/promoteAdmins.js",
     "test": "node --test"
   },
   "keywords": [],
