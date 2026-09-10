@@ -1,19 +1,16 @@
-const path = require('node:path');
-const { openDatabase, getQuery, runQuery } = require('./auth.service');
+const Team = require('../models/Team');
+const Player = require('../models/Player');
+const Match = require('../models/Match');
+const Announcement = require('../models/Announcement');
 
-const DEFAULT_DB_PATH = path.join(__dirname, '..', '..', 'data', 'ljv_auth.db');
 const MATCH_STATUSES = ['Pendiente', 'En Vivo', 'Finalizado'];
 
-function getDb(dbPath = DEFAULT_DB_PATH) {
-  return openDatabase(dbPath);
-}
-
-async function getPopup(dbPath = DEFAULT_DB_PATH) {
-  const popup = await getQuery(getDb(dbPath), 'SELECT * FROM configuracion_popup WHERE id = 1');
+async function getPopup() {
+  const popup = await Announcement.findOne({}).sort({ createdAt: -1 }).lean();
   return popup || { titulo: '¡Bienvenidos!', mensaje: '', activo: 1 };
 }
 
-async function updatePopup({ titulo, mensaje, activo }, dbPath = DEFAULT_DB_PATH) {
+async function updatePopup({ titulo, mensaje, activo }) {
   const cleanTitle = String(titulo || '').trim();
   const cleanMessage = String(mensaje || '').trim();
 
@@ -21,87 +18,105 @@ async function updatePopup({ titulo, mensaje, activo }, dbPath = DEFAULT_DB_PATH
     throw new Error('El título y el mensaje del pop-up son obligatorios.');
   }
 
-  await runQuery(
-    getDb(dbPath),
-    'UPDATE configuracion_popup SET titulo = ?, mensaje = ?, activo = ? WHERE id = 1',
-    [cleanTitle, cleanMessage, activo ? 1 : 0]
-  );
+  let popup = await Announcement.findOne({});
 
-  return getPopup(dbPath);
+  if (!popup) {
+    popup = await Announcement.create({
+      titulo: cleanTitle,
+      mensaje: cleanMessage,
+      activo: Boolean(activo)
+    });
+  } else {
+    popup.titulo = cleanTitle;
+    popup.mensaje = cleanMessage;
+    popup.activo = Boolean(activo);
+    await popup.save();
+  }
+
+  return popup.toObject();
 }
 
-async function listAdminTeams(dbPath = DEFAULT_DB_PATH) {
-  const db = getDb(dbPath);
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT id, nombre, categoria, puntos, goles_favor, goles_contra
-       FROM equipos ORDER BY puntos DESC, goles_favor DESC, nombre ASC`,
-      (error, rows) => {
-        if (error) return reject(error);
-        resolve(rows || []);
-      }
-    );
-  });
+async function listAdminTeams() {
+  return Team.find({}).sort({ puntos: -1, goles_favor: -1, nombre: 1 }).lean();
 }
 
-async function updateTeamStats({ teamId, puntos, golesFavor, golesContra }, dbPath = DEFAULT_DB_PATH) {
+async function updateTeamStats({ teamId, puntos, golesFavor, golesContra }) {
   const values = [Number(puntos), Number(golesFavor), Number(golesContra)];
-  if (!Number.isInteger(Number(teamId)) || values.some((value) => !Number.isInteger(value) || value < 0)) {
+  if (!teamId || values.some((value) => !Number.isInteger(value) || value < 0)) {
     throw new Error('Las estadísticas del equipo deben ser números enteros positivos.');
   }
 
-  const result = await runQuery(
-    getDb(dbPath),
-    'UPDATE equipos SET puntos = ?, goles_favor = ?, goles_contra = ? WHERE id = ?',
-    [...values, Number(teamId)]
-  );
+  const team = await Team.findById(teamId);
 
-  if (!result.changes) throw new Error('No existe ese equipo.');
-  return result;
+  if (!team) {
+    throw new Error('No existe ese equipo.');
+  }
+
+  team.puntos = Number(puntos);
+  team.goles_favor = Number(golesFavor);
+  team.goles_contra = Number(golesContra);
+  await team.save();
+
+  return team.toObject();
 }
 
-async function listPlayers(dbPath = DEFAULT_DB_PATH) {
-  const db = getDb(dbPath);
-  return new Promise((resolve, reject) => {
-    db.all(
-      `SELECT j.id, j.equipo_id, j.nombre, j.posicion, e.nombre AS equipo_nombre
-       FROM jugadores j JOIN equipos e ON e.id = j.equipo_id
-       ORDER BY e.nombre ASC, j.nombre ASC`,
-      (error, rows) => {
-        if (error) return reject(error);
-        resolve(rows || []);
-      }
-    );
-  });
+async function listPlayers() {
+  const players = await Player.find({}).populate('equipo_id').sort({ nombre: 1 }).lean();
+
+  return players.map((player) => ({
+    id: player._id.toString(),
+    equipo_id: player.equipo_id ? player.equipo_id._id.toString() : null,
+    nombre: player.nombre,
+    posicion: player.posicion,
+    equipo_nombre: player.equipo_id ? player.equipo_id.nombre : null
+  }));
 }
 
-async function updateMatch({ matchId, equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, cancha, estado }, dbPath = DEFAULT_DB_PATH) {
+async function updateMatch({ matchId, equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, cancha, estado }) {
   if (!equipoLocalId || !equipoVisitanteId || equipoLocalId === equipoVisitanteId || !fechaPartido || !horaPartido || !cancha) {
     throw new Error('Completa todos los datos del partido y usa equipos diferentes.');
   }
-  if (!MATCH_STATUSES.includes(estado)) throw new Error('El estado del partido no es válido.');
 
-  const result = await runQuery(
-    getDb(dbPath),
-    `UPDATE partidos SET equipo_local_id = ?, equipo_visitante_id = ?, fecha_partido = ?,
-     hora_partido = ?, cancha = ?, estado = ? WHERE id = ?`,
-    [Number(equipoLocalId), Number(equipoVisitanteId), fechaPartido, horaPartido, String(cancha).trim(), estado, Number(matchId)]
-  );
+  if (!MATCH_STATUSES.includes(estado)) {
+    throw new Error('El estado del partido no es válido.');
+  }
 
-  if (!result.changes) throw new Error('No existe ese partido.');
-  return result;
+  const match = await Match.findById(matchId);
+
+  if (!match) {
+    throw new Error('No existe ese partido.');
+  }
+
+  const local = await Team.findById(equipoLocalId);
+  const visitante = await Team.findById(equipoVisitanteId);
+
+  if (!local || !visitante) {
+    throw new Error('Los equipos del partido no existen.');
+  }
+
+  match.equipoLocalId = local._id;
+  match.equipoVisitanteId = visitante._id;
+  match.equipo_a = local.nombre;
+  match.equipo_b = visitante.nombre;
+  match.fecha = fechaPartido;
+  match.hora = horaPartido;
+  match.cancha = String(cancha).trim();
+  match.estado = estado;
+  await match.save();
+
+  return match.toObject();
 }
 
-async function deleteMatch(matchId, dbPath = DEFAULT_DB_PATH) {
-  const result = await runQuery(getDb(dbPath), 'DELETE FROM partidos WHERE id = ?', [Number(matchId)]);
-  if (!result.changes) throw new Error('No existe ese partido.');
-  return result;
+async function deleteMatch(matchId) {
+  const match = await Match.findByIdAndDelete(matchId);
+  if (!match) throw new Error('No existe ese partido.');
+  return match;
 }
 
-async function deletePlayer(playerId, dbPath = DEFAULT_DB_PATH) {
-  const result = await runQuery(getDb(dbPath), 'DELETE FROM jugadores WHERE id = ?', [Number(playerId)]);
-  if (!result.changes) throw new Error('No existe ese jugador.');
-  return result;
+async function deletePlayer(playerId) {
+  const player = await Player.findByIdAndDelete(playerId);
+  if (!player) throw new Error('No existe ese jugador.');
+  return player;
 }
 
 module.exports = {

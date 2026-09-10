@@ -10,7 +10,6 @@ const apiRoutes = require('./routes/api.routes');
 const adminRoutes = require('./routes/adminRoutes');
 // Importa el middleware global para manejar errores.
 const errorHandler = require('./middlewares/error-handler');
-const { initDatabase } = require('./services/auth.service');
 
 // Crea la instancia principal de la aplicacion Express.
 const app = express();
@@ -36,10 +35,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Publica archivos estaticos como CSS, imagenes y JavaScript del navegador.
 app.use(express.static(path.join(__dirname, 'public')));
-
-initDatabase().catch((error) => {
-  console.error('No se pudo inicializar la base de datos de autenticacion:', error);
-});
 
 // Registra las rutas de las paginas web desde la raiz del sitio.
 app.use('/admin', adminRoutes);

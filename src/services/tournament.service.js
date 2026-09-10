@@ -1,61 +1,37 @@
-const { openDatabase, getQuery } = require('./auth.service');
+const Match = require('../models/Match');
+const Team = require('../models/Team');
 
-const DEFAULT_DB_PATH = require('node:path').join(__dirname, '..', '..', 'data', 'ljv_auth.db');
+async function getTeams() {
+  const teams = await Team.find({}).sort({ nombre: 1 }).lean();
 
-function getDb(dbPath = DEFAULT_DB_PATH) {
-  return openDatabase(dbPath);
+  return teams.map((team) => ({
+    id: team._id.toString(),
+    name: team.nombre,
+    category: team.categoria
+  }));
 }
 
-async function getTeams(dbPath = DEFAULT_DB_PATH) {
-  const db = getDb(dbPath);
+async function getMatches() {
+  const matches = await Match.find({}).sort({ fecha: 1, hora: 1 }).lean();
 
-  return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM equipos ORDER BY nombre ASC', (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows.map((team) => ({
-        id: team.id,
-        name: team.nombre,
-        category: team.categoria
-      })));
-    });
-  });
+  return matches.map((match) => ({
+    id: match._id.toString(),
+    homeTeamId: match.equipoLocalId ? match.equipoLocalId.toString() : null,
+    awayTeamId: match.equipoVisitanteId ? match.equipoVisitanteId.toString() : null,
+    date: match.fecha,
+    time: match.hora,
+    field: match.cancha,
+    status: match.estado,
+    homeScore: match.goles_local,
+    awayScore: match.goles_visitante,
+    homeTeam: match.equipo_a || 'Equipo local',
+    awayTeam: match.equipo_b || 'Equipo visitante',
+    result: match.resultado || `${match.equipo_a || 'Equipo local'} ${match.goles_local ?? 0} - ${match.goles_visitante ?? 0} ${match.equipo_b || 'Equipo visitante'}`
+  }));
 }
 
-async function getMatches(dbPath = DEFAULT_DB_PATH) {
-  const db = getDb(dbPath);
-
-  return new Promise((resolve, reject) => {
-    db.all(
-      `
-        SELECT p.*, e1.nombre AS equipo_local, e2.nombre AS equipo_visitante
-        FROM partidos p
-        LEFT JOIN equipos e1 ON e1.id = p.equipo_local_id
-        LEFT JOIN equipos e2 ON e2.id = p.equipo_visitante_id
-        ORDER BY p.fecha_partido ASC, p.hora_partido ASC
-      `,
-      (err, rows) => {
-        if (err) return reject(err);
-        resolve((rows || []).map((match) => ({
-          id: match.id,
-          homeTeamId: match.equipo_local_id,
-          awayTeamId: match.equipo_visitante_id,
-          date: match.fecha_partido,
-          time: match.hora_partido,
-          field: match.cancha,
-          status: match.estado,
-          homeScore: match.goles_local,
-          awayScore: match.goles_visitante,
-          homeTeam: match.equipo_local,
-          awayTeam: match.equipo_visitante,
-          result: match.resultado || `${match.equipo_local || 'Equipo local'} ${match.goles_local ?? 0} - ${match.goles_visitante ?? 0} ${match.equipo_visitante || 'Equipo visitante'}`
-        })));
-      }
-    );
-  });
-}
-
-async function getSummary(dbPath = DEFAULT_DB_PATH) {
-  const [teams, matches] = await Promise.all([getTeams(dbPath), getMatches(dbPath)]);
+async function getSummary() {
+  const [teams, matches] = await Promise.all([getTeams(), getMatches()]);
 
   return {
     teamCount: teams.length,

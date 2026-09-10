@@ -1,11 +1,9 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('node:path');
-const { openDatabase, getQuery, runQuery } = require('./auth.service');
+const Team = require('../models/Team');
+const Player = require('../models/Player');
+const Match = require('../models/Match');
+const User = require('../models/User');
 
-const DEFAULT_DB_PATH = path.join(__dirname, '..', '..', 'data', 'ljv_auth.db');
-
-async function createEquipo({ nombre, categoria, emailCapitan }, dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
+async function createEquipo({ nombre, categoria, emailCapitan }) {
   const trimmedNombre = String(nombre || '').trim();
   const trimmedCategoria = String(categoria || '').trim();
 
@@ -13,31 +11,34 @@ async function createEquipo({ nombre, categoria, emailCapitan }, dbPath = DEFAUL
     throw new Error('El nombre y la categoría del equipo son obligatorios.');
   }
 
-  const equipo = await getQuery(db, 'SELECT * FROM equipos WHERE nombre = ?', [trimmedNombre]);
+  const existing = await Team.findOne({ nombre: trimmedNombre });
 
-  if (equipo) {
-    return equipo;
+  if (existing) {
+    return {
+      id: existing._id.toString(),
+      nombre: existing.nombre,
+      categoria: existing.categoria
+    };
   }
 
-  const result = await runQuery(
-    db,
-    'INSERT INTO equipos (nombre, categoria) VALUES (?, ?)',
-    [trimmedNombre, trimmedCategoria]
-  );
+  const equipo = await Team.create({
+    nombre: trimmedNombre,
+    categoria: trimmedCategoria,
+    capitanEmail: emailCapitan ? String(emailCapitan).trim().toLowerCase() : null
+  });
 
   if (emailCapitan) {
-    await runQuery(db, 'UPDATE usuarios SET nombre_equipo = ? WHERE email = ?', [trimmedNombre, String(emailCapitan).trim().toLowerCase()]);
+    await User.updateOne({ email: String(emailCapitan).trim().toLowerCase() }, { $set: { teamName: trimmedNombre } });
   }
 
   return {
-    id: result.id,
-    nombre: trimmedNombre,
-    categoria: trimmedCategoria
+    id: equipo._id.toString(),
+    nombre: equipo.nombre,
+    categoria: equipo.categoria
   };
 }
 
-async function addJugador({ equipoId, nombre, posicion }, dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
+async function addJugador({ equipoId, nombre, posicion }) {
   const trimmedNombre = String(nombre || '').trim();
   const trimmedPosicion = String(posicion || '').trim();
 
@@ -45,97 +46,96 @@ async function addJugador({ equipoId, nombre, posicion }, dbPath = DEFAULT_DB_PA
     throw new Error('Todos los campos del jugador son obligatorios.');
   }
 
-  const result = await runQuery(
-    db,
-    'INSERT INTO jugadores (equipo_id, nombre, posicion) VALUES (?, ?, ?)',
-    [Number(equipoId), trimmedNombre, trimmedPosicion]
-  );
+  const equipo = await Team.findById(equipoId);
 
-  return {
-    id: result.id,
-    equipoId: Number(equipoId),
+  if (!equipo) {
+    throw new Error('No existe ese equipo.');
+  }
+
+  const jugador = await Player.create({
+    equipo_id: equipo._id,
     nombre: trimmedNombre,
     posicion: trimmedPosicion
+  });
+
+  return {
+    id: jugador._id.toString(),
+    equipoId: jugador.equipo_id.toString(),
+    nombre: jugador.nombre,
+    posicion: jugador.posicion
   };
 }
 
-async function createPartido({ equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, cancha, estado = 'Pendiente' }, dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
-
+async function createPartido({ equipoLocalId, equipoVisitanteId, fechaPartido, horaPartido, cancha, estado = 'Pendiente' }) {
   if (!equipoLocalId || !equipoVisitanteId || equipoLocalId === equipoVisitanteId || !fechaPartido || !horaPartido || !cancha) {
     throw new Error('Faltan datos para crear el partido.');
   }
 
-  const result = await runQuery(
-    db,
-    'INSERT INTO partidos (equipo_local_id, equipo_visitante_id, fecha_partido, hora_partido, cancha, estado) VALUES (?, ?, ?, ?, ?, ?)',
-    [Number(equipoLocalId), Number(equipoVisitanteId), fechaPartido, horaPartido, String(cancha).trim(), estado]
-  );
+  const local = await Team.findById(equipoLocalId);
+  const visitante = await Team.findById(equipoVisitanteId);
+
+  if (!local || !visitante) {
+    throw new Error('Los equipos del partido no existen.');
+  }
+
+  const partido = await Match.create({
+    equipoLocalId: local._id,
+    equipoVisitanteId: visitante._id,
+    equipo_a: local.nombre,
+    equipo_b: visitante.nombre,
+    fecha: fechaPartido,
+    hora: horaPartido,
+    cancha: String(cancha).trim(),
+    estado,
+    goles_local: 0,
+    goles_visitante: 0
+  });
 
   return {
-    id: result.id,
-    equipoLocalId: Number(equipoLocalId),
-    equipoVisitanteId: Number(equipoVisitanteId),
-    fechaPartido,
-    horaPartido,
-    cancha: String(cancha).trim(),
-    estado
+    id: partido._id.toString(),
+    equipoLocalId: local._id.toString(),
+    equipoVisitanteId: visitante._id.toString(),
+    fechaPartido: partido.fecha,
+    horaPartido: partido.hora,
+    cancha: partido.cancha,
+    estado: partido.estado
   };
 }
 
-async function actualizarResultadoPartido({ partidoId, golesLocal, golesVisitante }, dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
+async function actualizarResultadoPartido({ partidoId, golesLocal, golesVisitante }) {
+  const partido = await Match.findById(partidoId);
 
-  const partido = await getQuery(db, 'SELECT * FROM partidos WHERE id = ?', [Number(partidoId)]);
   if (!partido) {
     throw new Error('No existe ese partido.');
   }
 
-  const local = await getQuery(db, 'SELECT nombre FROM equipos WHERE id = ?', [partido.equipo_local_id]);
-  const visitante = await getQuery(db, 'SELECT nombre FROM equipos WHERE id = ?', [partido.equipo_visitante_id]);
+  const resultado = `${partido.equipo_a} ${Number(golesLocal)} - ${Number(golesVisitante)} ${partido.equipo_b}`;
 
-  const resultado = `${local.nombre} ${Number(golesLocal)} - ${Number(golesVisitante)} ${visitante.nombre}`;
+  partido.goles_local = Number(golesLocal);
+  partido.goles_visitante = Number(golesVisitante);
+  partido.estado = 'Finalizado';
+  partido.resultado = resultado;
+  await partido.save();
 
-  await runQuery(
-    db,
-    'UPDATE partidos SET goles_local = ?, goles_visitante = ?, estado = ?, resultado = ? WHERE id = ?',
-    [Number(golesLocal), Number(golesVisitante), 'Finalizado', resultado, Number(partidoId)]
-  );
-
-  return { id: Number(partidoId), resultado };
+  return { id: partido._id.toString(), resultado };
 }
 
-async function listarPartidos(dbPath = DEFAULT_DB_PATH) {
-  const db = openDatabase(dbPath);
-  const rows = await new Promise((resolve, reject) => {
-    db.all(
-      `
-        SELECT p.*, e1.nombre AS equipo_local, e2.nombre AS equipo_visitante
-        FROM partidos p
-        LEFT JOIN equipos e1 ON e1.id = p.equipo_local_id
-        LEFT JOIN equipos e2 ON e2.id = p.equipo_visitante_id
-        ORDER BY p.fecha_partido ASC, p.hora_partido ASC
-      `,
-      (err, data) => {
-        if (err) return reject(err);
-        resolve(data || []);
-      }
-    );
-  });
+async function listarPartidos() {
+  const partidos = await Match.find({}).sort({ fecha: 1, hora: 1 }).lean();
 
-  return rows.map((partido) => ({
-    id: partido.id,
-    equipo_local_id: partido.equipo_local_id,
-    equipo_visitante_id: partido.equipo_visitante_id,
-    equipo_local: partido.equipo_local,
-    equipo_visitante: partido.equipo_visitante,
-    fecha_partido: partido.fecha_partido,
-    hora_partido: partido.hora_partido,
+  return partidos.map((partido) => ({
+    id: partido._id.toString(),
+    equipo_local_id: partido.equipoLocalId ? partido.equipoLocalId.toString() : null,
+    equipo_visitante_id: partido.equipoVisitanteId ? partido.equipoVisitanteId.toString() : null,
+    equipo_local: partido.equipo_a,
+    equipo_visitante: partido.equipo_b,
+    fecha_partido: partido.fecha,
+    hora_partido: partido.hora,
     cancha: partido.cancha,
     estado: partido.estado,
     goles_local: partido.goles_local,
     goles_visitante: partido.goles_visitante,
-    resultado: partido.resultado || `${partido.equipo_local} ${partido.goles_local ?? 0} - ${partido.goles_visitante ?? 0} ${partido.equipo_visitante}`
+    resultado: partido.resultado || `${partido.equipo_a} ${partido.goles_local ?? 0} - ${partido.goles_visitante ?? 0} ${partido.equipo_b}`
   }));
 }
 
