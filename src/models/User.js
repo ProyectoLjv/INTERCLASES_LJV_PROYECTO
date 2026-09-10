@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
   teamName: {
     type: String,
     default: null
+  },
+  resetPasswordToken: {
+    type: String,
+    default: undefined
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: undefined
   }
 }, {
   timestamps: {

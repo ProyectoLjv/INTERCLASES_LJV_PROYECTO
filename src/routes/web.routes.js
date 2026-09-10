@@ -18,6 +18,10 @@ registerRoutes.forEach((route) => router.get(route, homeController.showRegister)
 loginRoutes.forEach((route) => router.post(route, authController.login));
 registerRoutes.forEach((route) => router.post(route, authController.register));
 router.get('/logout', authController.logout);
+router.get('/forgot-password', authController.showForgotPassword);
+router.post('/forgot-password', authController.forgotPassword);
+router.get('/reset-password/:token', authController.showResetPassword);
+router.post('/reset-password/:token', authController.resetPassword);
 
 // Exporta las rutas web para registrarlas en app.js.
 module.exports = router;

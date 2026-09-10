@@ -32,7 +32,8 @@ async function showHome(req, res, next) {
 function showLogin(req, res) {
   res.render('login', {
     title: 'Iniciar sesión | Interclases LJV',
-    error: null,
+    error: req.query.error || null,
+    success: req.query.success || null,
     formData: {}
   });
 }

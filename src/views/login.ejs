@@ -17,6 +17,9 @@
         <% if (error) { %>
           <div class="auth-alert error"><%= error %></div>
         <% } %>
+        <% if (success) { %>
+          <div class="auth-alert success"><%= success %></div>
+        <% } %>
 
         <form class="auth-form" action="/login" method="post">
           <label>
@@ -40,6 +43,10 @@
 
           <button type="submit">Entrar</button>
         </form>
+
+        <p class="auth-footer">
+          <a href="/forgot-password">¿Olvidaste tu contraseña?</a>
+        </p>
 
         <p class="auth-footer">
           ¿No tienes cuenta?

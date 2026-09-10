@@ -11,6 +11,7 @@
     "change-pass": "node src/scripts/changePassword.js",
     "list-users": "node src/scripts/listUsers.js",
     "promote-admins": "node src/scripts/promoteAdmins.js",
+    "test-send": "node src/scripts/testSend.js",
     "test": "node --test"
   },
   "keywords": [],
@@ -24,6 +25,7 @@
     "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "mongoose": "^8.24.4"
+    "mongoose": "^8.24.4",
+    "nodemailer": "^10.0.3"
   }
 }

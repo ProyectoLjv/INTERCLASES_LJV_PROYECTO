@@ -45,13 +45,23 @@ async function registerUser({ name, email, password, role = 'student', teamName 
   }
 
   const passwordHash = await bcrypt.hash(trimmedPassword, 10);
-  const user = await User.create({
-    nombre: trimmedName,
-    email: trimmedEmail,
-    password: passwordHash,
-    role: normalizedRole,
-    teamName: normalizedRole === 'student' ? trimmedTeamName : null
-  });
+  let user;
+
+  try {
+    user = await User.create({
+      nombre: trimmedName,
+      email: trimmedEmail,
+      password: passwordHash,
+      role: normalizedRole,
+      teamName: normalizedRole === 'student' ? trimmedTeamName : null
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      throw new Error('El correo electrónico ya se encuentra registrado. Intenta iniciar sesión o recuperar tu contraseña.');
+    }
+
+    throw error;
+  }
 
   return {
     id: user._id.toString(),
@@ -73,13 +83,13 @@ async function loginUser({ email, password }) {
   const user = await User.findOne({ email: trimmedEmail });
 
   if (!user) {
-    throw new Error('Credenciales inválidas.');
+    throw new Error('No existe una cuenta registrada con ese correo electrónico.');
   }
 
   const isValid = await bcrypt.compare(trimmedPassword, user.password);
 
   if (!isValid) {
-    throw new Error('Credenciales inválidas.');
+    throw new Error('La contraseña es incorrecta.');
   }
 
   return {
